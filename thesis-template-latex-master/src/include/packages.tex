@@ -30,7 +30,7 @@
 \usepackage{setspace} % For setting line spacing
 
 \usepackage[unicode]{hyperref} % For hyperlinks in the generated document.
-\usepackage{xcolor}
+\usepackage[table,xcdraw]{xcolor}
 \usepackage{listings} % For source code snippets.
 
 \usepackage[amsmath,thmmarks]{ntheorem} % Theorem-like environments.
@@ -64,3 +64,18 @@
 \usepackage{xspace}
 
 \usepackage{enumerate}
+\usepackage{enumitem}
+\usepackage{multicol}
+\usepackage{pythonhighlight}
+\usepackage{minted}
+
+\setsansfont{Calibri}
+\setmonofont{Consolas}
+\renewcommand{\theFancyVerbLine}{
+	\sffamily\textcolor[rgb]{0.5,0.5,0.5}{\scriptsize\arabic{FancyVerbLine}}}
+
+\usepackage{tabularx}
+	\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+	
+	
+\usepackage{rotating}

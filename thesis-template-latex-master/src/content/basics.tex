@@ -57,7 +57,7 @@ Az automatikus beszélőfelismerést egy számítógépes program végzi emberi 
 
 Az automatikus beszélőfelismerő általános működését az alábbi (!) ábra szemlélteti. A beszélő-ellenőrzés és beszélőazonosítás során is az első lépés rögzített \emph{jellemzők kinyerése}. Ezután az első, \emph{tanító fázisban} referencia modelleket készítünk az egyes beszélőkhöz a jellemzők alapján, amelyeket eltároljuk a beszélő adatbázisban. Beszélő-ellenőrzés esetén ebben a fázisban egy küszöbérték is meghatározásra kerül. \emph{Teszt fázisban} a rendszer kinyeri ugyanazokat a jellemzőket az aktuális hangmintából, majd \emph{jellemző összehasonlítás} történik.
 
-\begin{enumerate}[i)]
+\begin{enumerate}
 	\item beszélő-ellenőrzés esetén megkeresi az ellenőrizendő személyhez tartozó modellt az adatbázisban és összehasonlítja az aktuális jellemzőkkel. Ha az eredmény a küszöbszint felett van, a rendszer egyezést mutat.
 	\item beszélőazonosítás esetén az aktuális jellemzőket az összes modellel összehasonlítja, majd a legjobb egyezés mellett dönt. 
 \end{enumerate}
@@ -84,38 +84,72 @@ Az utóbbi két módszer előnyeit kombinálva megszületett az $i-vektorok$, am
 
 \section{Korábbi eredmények}
 
-\begin{figure}[!ht]
+
+
+\begin{table}[!ht]
+	\resizebox{\textwidth}{!}{%
+	\begin{tabular}{*7l} \toprule
+		\bfseries Szerző (év)
+		& \bfseries Szervezet
+		& \bfseries Adatbázis
+		& \bfseries Módszer
+		& \bfseries Jellemzők
+		& \bfseries \begin{tabular}{@{}l@{}} Hang \\ típusa \end{tabular}
+		& \bfseries Pontosság \\ \midrule
+		
+		\begin{tabular}{@{}l@{}} Douglas A. Reynolds  \\  (1995) \end{tabular}
+		& \begin{tabular}{@{}l@{}} Lincoln  \\  Laboratory \end{tabular}
+		& 49
+		& MFCC 
+		& \begin{tabular}{@{}l@{}} rövid \\ kifejezések \end{tabular} 
+		& telefon 
+		& 96.8 \% \\
+		
+		\begin{tabular}{@{}l@{}} Rabah W.  \\  (2004) \end{tabular}
+		& \begin{tabular}{@{}l@{}} King Abdulaziz  \\  University \end{tabular}
+		& 20
+		& \begin{tabular}{@{}l@{}} SVD-alapú   \\  algoritmus \end{tabular}
+		& LPC/Cepstral
+		& iroda
+		& 94 \% \\
+		
+		\begin{tabular}{@{}l@{}} Yang Shao  \\  (2008) \end{tabular}
+		& \begin{tabular}{@{}l@{}} Ohio State  \\  University \end{tabular}
+		& 34 
+		& GFCCs 
+		& hallási jellemzők
+		& telefon
+		& \~{}99.33 \% \\
+		
+		\begin{tabular}{@{}l@{}} P. Krishnamoorthy  \\  (2011) \end{tabular}
+		& TIMIT
+		& 100 
+		& GMM-UBM 
+		& MFCC
+		& labor
+		& 80 \% \\
+		
+		\begin{tabular}{@{}l@{}} Alfredo Maesa  \\  (2012) \end{tabular}
+		& Voxforge.org
+		& 250 
+		& MFCC 
+		& \begin{tabular}{@{}l@{}} spektrális \\ jellemzők \end{tabular} 
+		& \begin{tabular}{@{}l@{}} beszéd- \\ adatbázis \end{tabular} 
+		& > 96 \% \\
+
+		\begin{tabular}{@{}l@{}} Sharada V. Chougule  \\  (2015) \end{tabular}
+		& \begin{tabular}{@{}l@{}} Finolex Academy  \\  of Management \\ and Technology \end{tabular}
+		& 97 
+		& NDSF 
+		& spektrális
+		& labor
+		& \~{}98-100 \% \\
+		
+	\bottomrule
+	\end{tabular}}
 	\centering
-	\includegraphics[width=180mm, keepaspectratio]{figures/speaker_results.png}
-	\caption{Korábbi eredmények.}
-	\label{fig:speaker_results}
-\end{figure}
-
-\section{DNN alapú beszélőazonosító rendszerek}
-
-\subsection{WaveNet classifier}
-
-
-
-\section{Beszéd adathalmazok}
-
-\section{Működő beszélőazonosító rendszerek}
-
-\subsection{Wavenet}
-
-\subsection{SincNet}
-
-\subsection{Siamese Networks}
-
-\subsection{Egyéb}
-- Few shot learning
-
-- Open set recognition problem
-
-
-\section{Saját modell}
-
-
-
+	\caption{Korábbi eredmények szövegfüggetlen beszélőazonosítás terén.}
+	\label{fig:timit-dialects}
+\end{table}
 
 

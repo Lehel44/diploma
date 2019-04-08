@@ -43,8 +43,8 @@ A few-shot learningre való képességet az n-way k-shot feladattal szokták mé
 
 \begin{enumerate}
 	\item A modell kap egy eddig nem látott osztályból egy tesztmintát.
-	\item Kap továbbá egy ún. segítő adathalmazt, ami az összes k eddig nem látott osztályból n mintát tartalmaz.
-	\item Az algoritmus el kell döntse, hogy melyik osztályba tartozik a tesztminta a segítőhalmazból.
+	\item Kap továbbá egy ún. segéd adathalmazt, ami az összes k eddig nem látott osztályból n mintát tartalmaz.
+	\item Az algoritmus el kell döntse, hogy melyik osztályba tartozik a tesztminta a segédhalmazból.
 \end{enumerate}
 
 A beszélőfelismerő rendszereket tekintve nagyon fontos, hogy a neurális hálózat rugalmas legyen a tanulás szempontjából. Tegyük fel, hogy egy cég telefonos, szövegfüggetlen,
@@ -54,9 +54,67 @@ hogy ne tanítsuk túl a modellt.
 
 A másik, még nagyobb probléma, hogy új, vagy távozó kliens esetén újra kell tanítani a teljes hálózatot. A few-shot learning tökéletesen
 megoldja mindkét problémát. Kevés tanítómintával -- regisztrációkor pár kérdés kliensenként -- működik a rendszer és rugalmas is tanítás szempontjából; új kliens esetén
-hozzáadjuk a segítő halmazhoz a hangmintáját, távozáskor pedig eltávolítjuk.
+hozzáadjuk a segédhalmazhoz a hangmintáját, távozáskor pedig eltávolítjuk.
 
-\section{Metrika alapú metatanítás}
+\section{Metrikus metatanítás}
+
+Metrikus metatanítás során a modell a tanítóminták halmazán egy távolságfüggvényt tanul meg.
+
+\begin{equation} \label{eq:3}
+P_{\theta}(y|x, S) = \sum_{(x_i, y_i)\in S} k_{\theta}(x, x_i)y_i
+\end{equation}
+
+A valószínűsége annak, hogy a $\theta$ modellparaméterekkel az $x$ minta $S$ segédhalmaz mellett az $y$ osztályba tartozik egyenlő a segédhalmazba tartozó címkék súlyozott összegével. A súlyt a $k_{\theta}$ ún. kernel függvény számolja ki. A kernel függvény az a távolságfüggvény, amit a modell megtanul.
+
+A megközelítésre több implementáció is létezik, mint például a Matching Network, Prototypical Network, Relation Network és a konvolúciós sziámi hálózat. Ezek közül az utolsót fogom részletesen bemutatni.  
+
+\subsection{Konvolúciós sziámi hálózatok}
+
+A konvolúciós sziámi hálózatok két konvolúciós ikerhálózatból épülnek fel, amelyek megosztott súlyokat és rétegeket használnak. A hálózat két bementet kap, és miután a konvolúciós rétegek kiszámolták a jellemző vektorokat, ezeknek egy $\k_{\theta}$ távolságfüggvénnyel méri a hasonlóságát. Ha a hasonlósági pont meghalad egy küszöbértéket, a két képet hasonlónak tekintjük, egyébként különbözőnek.
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=100mm, keepaspectratio]{figures/siamese-cnn-arch.png}
+	\caption{Konvolúciós sziámi hálózat architektúrája.}
+	\label{fig:siamese-cnn-arch}
+\end{figure}
+
+Sok ábrán a sziámi hálózatokat két azonos hálózattal reprezentálják. Valójában mivel a két ikerhálózat súlyai és rétegei megosztottak, elég egy hálózatot használni és csak a jellemző vektorokat eltárolni, így kevesebb erőforrást használunk.
+
+Működésük közben egy mintáról nem azt tanulják meg, hogy melyik osztályba tartozik, hanem a különbséget a többi mintához képest. Tanítás közben a konvolúciós hálózatot súlyait javítják, hogy az általa képzett kódolások azonos minták esetén azonosak, különbözők esetén pedig különbözőek legyenek, így a távolságfüggvény jól fog működni.
+
+A konvolúciós sziámi hálózatok megoldást jelentenek a few-shot learning problémára, mert kevés tanítómintával is jól működnek. Vegyük példaként egy vállalat arcfelismerő rendszerét. A sziámi hálózatnak elég egy segédhalmazban egy-egy képet eltárolni minden alkalmazottról. Amikor egy alkalmazott a rendszert használja, a képét összehasonlítja a segédhalmazban lévő képekkel és a hasonlóság alapján dönt. Ezzel két problémát old meg:
+
+\begin{enumerate}
+	\item Egyrészt nem szükséges minden alkalmazottról több képet készíteni.
+	\item Másrészt új alkalmazottak érkezése, vagy egy alkalmazott távozása után nem szükséges újra tanítani a hálózatot.
+\end{enumerate}
+
+A sziámi hálózatoknak a legismertebb költségfüggvénye a \emph{triplet loss} függvény. Ezt a \emph{gradient descent} módszerrel optimizálva tanítjuk a hálózatot. A triplet loss három bemenetet igényel, amelyek jelen példában a képekből képzett jellemző vektorok. Az egyik egy rögzített kép vektora, ez az ún. \emph{anchor}. A másik kettő pedig egy pozitív és egy negatív minta. Az egyik ugyanabból az osztályból származik mint az \emph{anchor} kép, a másik különbözőből.
+\begin{equation}\label{eq:4}
+	\mathcal{L}_{triplet}(A, P, N) = \max(d(A, P) - d(A, N) + m, 0)
+\end{equation}
+
+A $d$ a távolságfüggvény, ami lehet például euklideszi távolság. A \emph{triplet loss} veszi az anchor és a pozitív meg az anchor és a negatív minta távolságainak különbségét, majd ezt eltolja az $m$ küszöbértékkel. Ha az előbbi pozitív ezt veszi eredményül, egyébként nullát.
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=100mm, keepaspectratio]{figures/triplet-loss.png}
+	\caption{A triplet loss függvény csökkenti a távolságot a hasonló és növeli a különböző minták között.}
+	\label{fig:triplet-loss}
+\end{figure}
+
+Akkor jó a vektorok elhelyezkedése a metrikus térben, ha a hasonlók között a távolság kicsi, a különbözők között pedig nagy. Azt szeretnénk elérni, hogy
+$d(A, P) \le d(A, N)$ fenn álljon. Átrendezve a $d(A, P) - d(A, N) \le 0$ egyenletet kapjuk. Ezt kielégíti a $d(A, P) = 0$, $d(A, N) = 0$ megoldás. A másik triviális megoldás, ha a pozitív és negatív minta kódolása ugyanaz lenne, ekkor ugyanis $d(A, P) = d(A, N)$ így $d(A, P) - d(A, N) = 0$. Szeretnénk, ha a neurális hálózat nem nullvektorokkal vagy azonos vektorokkal kódolná az összes képet, ezért hozzáadunk egy $m$ küszöbértéket az egyenlethez.
+
+\begin{equation}\label{eq:5}
+	\begin{aligned}
+		d(A, P) + m \le d(A, N) \\
+		d(A, P) - d(A, N) + m \le 0
+	\end{aligned}
+\end{equation}
+
+Ideális esetben a $d(A, P) - d(A, N) + m$ negatív, ilyenkor a veszteség 0. Ha nem így van, a triplet loss ezt a veszteséget adja vissza. A költségfüggvény a tanítóhalmazban lévő tripletekre alkalmazott triplet lossok összege. Ezt minimalizálva a \ref{fig:triplet-loss} ábrán látható távolságok csökkentése, növelése történik.
 
 \section{Optimizációs metatanítás}
 
@@ -163,3 +221,5 @@ A reptile algoritmus nagyon hasonlít a MAML-hoz. Ugyanúgy a hálózat kezdeti 
 Adott a szigma kezdeti paraméter vektor. Valamennyi iteráción keresztül választunk egy véletlen feladatot és futtatjuk rajta valahányszor az SGD algoritmust, ami a $\phi$ paraméter vektorból a $\tilde\phi$-t eredményezi. Ezután javítjuk a modell kezdeti paramétereit a megadott szabály szerint.
 
 \section{Modell alapú metatanítás}
+
+A modell alapú metatanítás lényege az olyan modelleket tervezése, amelyek képesek kevés tanítással, gyorsan javítani a paramétereiket. Egy ismert implementáció a Memory-Augmented Neural Networks, ami neurális Turing-gépeket használ.

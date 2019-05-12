@@ -75,6 +75,52 @@ Miután a felhasználók regisztráltak, az alkalmazás a hangjuk alapján azono
 
 \subsection{voicemap}
 
+A \emph{voicemap} egy beszélőfelismerő GitHub repository, ami tartalmazza a modell kódját, a tanítást, különböző teszteket és egy optimalizált előre tanított modellt. Az implementációhoz \emph{Kerast} használ.
+
+Két modellt vizsgál; egy sziámi neurális hálózatot és egy sima konvolúciósat klasszifikációval. A sziámi hálózat alapja egy konvolúciós enkóder, amely a nyers hangmintákból kinyeri a jellemzőket és egy hangvektorokat állít elő belőlük. Az enkóder hálózat a következő konvolúciós blokkokból áll:
+
+\begin{itemize}
+	\item Conv1D 32-es méretű filterekkel, ahol a filterek száma szorzódik a blokk számával. Az aktivációs függvény \emph{ReLu}.
+	\item BatchNormalization
+	\item SpatialDropout1D
+	\item MaxPool1D
+\end{itemize}
+
+Négy ilyen konvolúciós blokk követi egymást, majd egy \emph{GlobalMaxPool1D} és egy \emph{Dense} réteg a hangvektor méretével.
+
+A sziámi hálózat alapja két enkóder hálózat, amelynek súlyai megosztottak, tehát úgy is tekinthetünk rá, hogy egy enkóder hálózatra két bemenetet adhatunk. A hangminták a hálózaton áthaladva jellemző vektorokká alakulnak. Ezt a részt a konvolúciós enkóder végzi. Ezután a két vektor közötti távolságot a sziámi hálózat kiszámolja.
+
+Az implementált távolságmetrikák a következők:
+
+\begin{itemize}
+	\item \emph{weighted\_l1}: Az eredeti one-shot cikk szerinti távolságmetrika.
+	\item \emph{uniform\_euclidean}: Euklideszi távolság két vektor között.
+	\item \emph{cosine\_distance}: Koszinusz távolság, azaz a két vektor által bezárt szög koszinuszát méri.
+\end{itemize}
+
+A kiszámolt távolság ezután minden esetben áthalad egy szigmoid aktivációs függvényű \emph{Dense} rétegen, ami $0$ és $1$ közé nyomja az eredményt.
+
+A repository tartalmaz egy utility szkriptet a hangminták preprocesszálásához és few-shot kiértékeléshez, amit később a saját alkalmazásomban is felhasználtam. Ez tartalmazza többek között az \emph{n\_shot\_task\_evaluation} függvényt is, ami \emph{k-way n-shot} feladatokkal teszteli a modellt. Az alábbi argumentumokat adhatjuk meg:
+
+\begin{itemize}
+	\item  \emph{model}: A tesztelendő modell.
+	\item  \emph{dataset}: A tesztmintákat tartalmazó adathalmaz objektum.
+	\item  \emph{preprocessor}: Előfeldolgozó függvény a minták csökkentett mintavételezésére és standardizálására.
+	\item  \emph{num\_task}: A feladatok száma.
+	\item  \emph{n}: Hány hangminta tartozik egy beszélőhöz a segédhalmazban.
+	\item  \emph{k}: Ennyi beszélő, azaz osztály van a segédhalmazban.
+	\item  \emph{network\_type}: Sziámi vagy klasszifikációs.
+	\item  \emph{distance\_metric}: Sziámi hálózat esetén a hangvektorok közötti távolságmetrika.
+\end{itemize}
+
+A voicemap tanításhoz és teszteléshez a \emph{LibriSpeech} adatbázis \emph{dev-clean}, \emph{train-clean-100} és \emph{train-clean-360} adathalmazokat használja, amelyek sorban $40$, $251$ és $921$ különböző beszélőtől tartalmaznak nyers hangfájlokat. Egy adathalmazt egy adatgenerátor osztály reprezentál ami a keras.util.Sequence osztályból származik. Az adatgenerátorok nagy adathalmazok esetén hasznosak, amikor az egész adathalmaz nem fér bele a memóriába. Ilyen esetekben egyesével generálnak adatokat.
+
+A \emph{keras.util.Sequence} osztályból való leszármaztatás miatt az adatgenerátorban implementálni kell a \emph{\_\_len\_\_} és \emph{\_\_get\_item\_\_} függvényeket. Előbbi az adathalmaz méretét adja vissza, utóbbi annak indexelését teszi lehetővé. Továbbá biztosítja, hogy egy epochon belül egy mintával csak egyszer tanítjuk a modellt.
+
+A \emph{LibriSpeechDataset} osztály ezen kívül képes még egy beszélőtől és különböző beszélőktől származó hangminta párok előállítására, tanításhoz hangminta pár kötegek építésére, amelyekben az azonos és különböző beszélőktől származó párok esélye 50\%. Fontos függvénye még a \emph{build\_n\_shot\_task}, ami validációhoz és kiértékeléshez \emph{k-way n-shot} feladatokat hoz létre. A függvény visszaad egy hangmintát az azonosítandó beszélőtől és egy generált segédhalmazt, ami tartalmaz mintát az azonosítandó és egyéb beszélőktől is az $n$ és $k$ paraméterek alapján.
+
+A repositoryban számos kísérlet található a legjobb teljesítmény elérésére.
+
 \section{Implementáció}
 
 \subsection{Kliens alkalmazás}

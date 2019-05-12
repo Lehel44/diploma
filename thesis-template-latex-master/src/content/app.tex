@@ -71,6 +71,10 @@ Miután a felhasználók regisztráltak, az alkalmazás a hangjuk alapján azono
 	\item A szerver válaszol az azonosított felhasználó nevével, vagy közli, hogy a felhasználó nincs a rendszerben.
 \end{enumerate}
 
+\section{Felhasznált modellek}
+
+\subsection{voicemap}
+
 \section{Implementáció}
 
 \subsection{Kliens alkalmazás}
@@ -171,21 +175,63 @@ Mindkét osztály a \emph{UploadAudio} objektumot használ a fájl szerverhez va
 
 \subsection{Szerver}
 
-Szerver oldalon egy Flask python alkalmazás fut felhőben, és REST API-val rendelkezik. Fogadja a klienstől érkező hangfájlokat, előfeldolgozza és tárolja őket. Azonosításkor a modellen prediktál, majd visszaküldi az eredményt a kliensnek.
+Szerver oldalon egy Flask webalkalmazás fut felhőben és REST API-val rendelkezik. Fogadja a klienstől érkező hangfájlokat, előfeldolgozza és tárolja őket. Azonosításkor a modellen prediktál, majd visszaküldi az eredményt a kliensnek.
 
 \subsubsection{Flask}
 
 A Flask egy Python nyelvhez készült web mikrokeretrendszer. Mikrokeretrendszernek nevezzük a minimális webalkalmazás keretrendszereket, amelyekből általában hiányoznak a autentikációs, autorizációs könyvtárak, az objektum-relációs leképzés stb.
 
-A Flask előnye, hogy nagyon gyorsan és könnyedén lehet vele REST API-t készíteni és elindítani a webalkalamzást. Nincs szükség más könyvtárakra, toolokra hozzá.
+A Flask előnye, hogy nagyon gyorsan és könnyedén lehet vele REST API-t készíteni és elindítani egy webalkalamzást. Nincs szükség más könyvtárakra, toolokra hozzá.
 
 \subsubsection{Projekt felépítése}
 
 \begin{itemize}
-	\item \emph{app/app.py}: A webalkalmazást indító és a logikát tartalmazó (előfeldolgozás, predikció, fájlok kezelése) Python szkript.
-	\item \emph{config.py}: Konfigurációs objektumokat tartalmaz.
+	\item \emph{app}: A webalkalmazást indító és a logikát tartalmazó (előfeldolgozás, predikció, fájlok kezelése) illetve konfigurációt kezelő Python szkriptek könyvtára (app.py, preprocess.py).
+	
+	\begin{itemize}
+		\item app/app.py
+		\item app/preprocess.py
+		\item app/config.py
+	\end{itemize}
+	
 	\item \emph{data}: Tartalmazza a klienstől regisztrációs és azonosítani kívánt \emph{wav} fájlokat és a preprocesszált állományokat.
+	
+	\begin{itemize}
+		\item data/wav: Az eredeti, klienstől érkezett hangfájlok.
+		\item data/preprocessed\_audio: Az előfeldolgozott hangfájlok. 
+		\item data/identify: Az azonosítandó felhasználóhoz tartozó hangfájlok.
+	\end{itemize}
+	
 	\item \emph{model}: A beszélőfelismerésre használt modelleket tároló mappa.
 \end{itemize}
 
 \subsubsection{Részletes működés}
+
+Az \emph{app.py} szkript négy fontos függvényt tartalmaz. Ezek közül az \emph{enroll} és az \emph{identify} függvények a REST API-t implementálják, a \emph{preprocess} a hangfájlok előfeldolgozását, a \emph{predict} a prediktálást végzi.
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=130mm, keepaspectratio]{figures/flask-class-diag.png}
+	\caption{Flask szerver: Osztálydiagram.}
+	\label{fig:flask-class-diag}
+\end{figure}
+
+Az \emph{app.py} először létrehoz egy Flask objektumot, ezután betölti a megfelelő konfigurációt a \emph{config.py} szkriptben deklarált valamelyik objektummal. Betölti a modellt, majd elindítja az alkalmazást, ami a \emph{/enroll} és \emph{/identify} útvonalakon \emph{POST} kérésekre vár.
+
+Mivel az alkalmazás egy prototípus és nincs szükség felhasználóspecifikus adatok tárolására néven kívül, adatbázis helyett egy \emph{dictionary} tárolja az egyedi azonosító - felhasználónév párokat egy fájlba szerializálva, a hangfájlok pedig egyedi azonosítónévvel vannak eltárolva.
+
+Ha egy kérés az \emph{enroll} útvonalon érkezik, az alkalmazás létrehoz egy egyedi azonosítót, és ezen a néven menti az audiofájlt. Ezután az azonosítókat és neveket tartalmazó \emph{dictionaryt} kiegészíti az aktuális bejegyzéssel. Az hangfájlt preprocesszálja, majd ha minden rendben ment visszatért egy \emph{Http OK (200)} státuszüzenettel.
+
+A \emph{preprocess} függvénynek két fő paramétere van: a hangminta hossza és a \emph{downsampling}, vagyis a csökkentett mintavételezési ráta. Mivel a jelenleg használt modell $3$ másodperces és $4$ kHz-en mintavételezett hangmintákat vár a bemenetére, a saját $4$ másodperces hangmintákból $3$ másodperces darabokat vág ki a közepétől számolva $1,5$-$1,5$ másodperces távolságra. Erre azért van szükség, hogy ha a felhasználó kicsit később kezd el beszélni vagy hamarabb hagyja abba, a felvétel elején vagy végén lévő szünet ne kerüljön bele a mintába.
+\newline
+
+A csökkentett mintavételezés az eltérő mintavételi frekvencia miatt szükséges. Az Androidot futtató készülékek $8$ és $16$ bites PCM mellett $8$, $16$ és $44.1$ kHz-es mintavételi frekvenciákat támogatnak. Esetünkben a modellt $4$ kHz-en tanították a saját hangminták pedig $8$ kHz-esek ezért $2$-es csökkentett mintavételezés szükséges.
+
+A \emph{identify} útvonalra érkező kéréseket a \emph{identify} függvény fogadja. Menti majd preprocesszálja a hangfájlt, meghívja a predickciót és visszatér az eredménnyel.
+
+A \emph{predict} függvény feladata a predikció elvégzése. Paraméterként a felhasználó azonosítóját kapja. Ez alapján párokat képez az azonosítandó felhasználó és a többi regisztrált felhasználó hangmintáiból és ezeket a modell bemenetére adja. A modell minden egyes párhoz kiszámol egy hasonlósági vektort. Ezeket és a hasonlósági küszöböt figyelembe véve dönt az eredményről.
+\newline
+
+A \emph{preprocess.py} szkript tartalmaz egy whiten() nevű függvényt, ami standardizálja a hangmintákat. Egy hangmintát egész számok sorozata reprezentál (PCM kódolás 4 vagy 16 biten). Először kivonja az átlagot minden számból, így a hangminta átlaga 0 lesz. Ezután újraskálázza a számokat, hogy ne legyenek kiugró amplitúdó értékek.
+
+A \emph{preprocess\_instances} végzi el a standardizálást és a csökkentett mintavételezést. A \emph{BatchPreProcessor} objektum pedig egy wrapper osztály, hogy az előfeldolgozást sziámi hálózatokhoz és sima osztályozó hálózatokhoz készült \emph{([input1, input2], output)} és \emph{(inputs, outputs)} formában is könnyedén elvégezhessük.

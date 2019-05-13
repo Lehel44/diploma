@@ -1,0 +1,18 @@
+%2F%2F Cool Class Diagram, 
+
+[MainActivity|+onCreate();+enroll();+identify();+hasPermissions()]
+
+[EnrollActivity|-wavRecorder:WavRecorder;-record:Button;-name:EditText;-info:TextView|+onCreate();+record()]
+
+[IdentifyActivity|-wavRecorder:WavRecorder;-identifyButton:Button;-info:TextView|+onCreate();+identify()]
+
+[UploadAudio|-client:OkHttpClient;-MEDIA_TYPE_WAV:MediaType|+upload(path:String;username:String;route:String)]
+
+[WavRecorder|-path:String;-recorder:AudioRecord;-RECORDER_SAMPLERATE:String;-RECORDER_CHANNELS:AudioFormat;-RECORDER_AUDIO_ENCODING:AudioFormat|+WavRecorder(path:String);+startRecording();+stopRecording()]
+
+[MainActivity]->[note:IdentifyActivity]
+[MainActivity]->[note:EnrollActivity]
+[EnrollActivity]++-1>[WavRecorder]
+[IdentifyActivity]++-1>[WavRecorder]
+[EnrollActivity]->[UploadAudio]
+[IdentifyActivity]->[UploadAudio]

@@ -1,0 +1,7 @@
+[app.py|enroll();identify();preprocess();predict()]
+[preprocess.py|preprocess_instances();BatchPreProcessor:class;whiten()]
+
+[config.py|Config:class;ProductionConfig:class;DevelopmentConfig:class;TestingConfig:class]
+
+[app.py]->[config.py]
+[app.py]->[preprocess.py]

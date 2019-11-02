@@ -6,7 +6,7 @@ A következő fejezetben bemutatom egy általam a beszélőfelismerés szemlélt
 
 Az alkalmazás kliens-szerver architektúrájú lesz. Az android kliens segítségével a felhasználó regisztrálhat a rendszerbe névvel és hanggal, majd az azonosítás opció megnyomásával hangmintát adva az alkalmazás eldönti, hogy regisztrálva van-e, és ha igen, akkor visszaadja az illető nevét.
 
-\section{Modell predikció a felhőben vagy lokálisan?}
+\section{Modell predikció a felhőben vagy lokálisan?} \label{cloud_or_local}
 
 
 A szervernek tárolnia kell a felhasználóktól származó hangmintákat és a felhasználó azonosítás folyamata közben összehasonlítani őket. Az összehasonlítást egy sziámi neurális hálózat végzi. Az alkalmazás felépítését tekintve a legfontosabb kérdés, hogy ezt az összehasonlítást központilag egy felhőben a szerver, vagy a kliens oldali alkalmazás végezze. Mivel a modell végzi a predikciót, ettől a döntéstől függően azt a szerveren vagy a kliens eszközökön kell tárolni. Mindkét architektúrának vannak előnyei és hátrányai is.
@@ -396,7 +396,7 @@ Az alkalmazás a következő REST végpontokat biztosítja a kliens számára:
 \end{figure}
 
 \begin{itemize}
-	\item \emph{app.py}: Az \emph{app.py} implementálja a REST végpontokat. Az \emph{app.py} először létrehoz egy Flask objektumot, ezután betölti a megfelelő konfigurációt a \emph{config.py} szkriptben deklarált valamelyik objektummal. Betölti a modellt, majd elindítja az alkalmazást, ami a \emph{/enroll} és \emph{/identify} útvonalakon \emph{HTTP POST} kérésekre vár.
+	\item \emph{app.py}: Az \emph{app.py} implementálja a REST végpontokat. Az \emph{app.py} először létrehoz egy Flask objektumot, ezután betölti a megfelelő konfigurációt a \emph{config.py} szkriptben deklarált valamelyik objektummal. Betölti a modellt, majd elindítja az alkalmazást, ami a \emph{/enroll}, \emph{/identify} és \emph{/authenticate} útvonalakon \emph{HTTP POST} kérésekre vár.
 	
 	Mivel az alkalmazás egy prototípus és nincs szükség felhasználóspecifikus adatok tárolására néven és jelszón kívül, adatbázis helyett \emph{dictionary} tárolja az egyedi azonosító - felhasználónév illetve egyedi azonosító - jelszó párokat egy fájlba szerializálva, a hangvektorok pedig egyedi azonosítónévvel vannak eltárolva.
 	
@@ -429,31 +429,101 @@ Az alkalmazás a következő REST végpontokat biztosítja a kliens számára:
 		Ha a jelszavas autentikáció nem sikerült, törli az átlagolásra váró hangvektort és HTTP 403 (Forbidden) státuszkóddal válaszol a kliensnek.
 	\end{itemize}
 
-	\item emph{model\_loader.py}:
+	\item \emph{model\_loader.py}:
 		A fejlesztés kezdetén a modell betöltése a \emph{app.py}-ban volt implementálva. Mivel a Flask több szálat használ, problémát okozott, hogy a modellt valamelyik függvény hamarabb használta minthogy azt valóban betöltötte volna.
 		\newline
 		\newline
-		Erre többféle megoldási lehetőség van. Például kötelezhetjük a Tensorflowt globális default gráf használatára. Mivel ez a megoldás csak részben működött, más javaslat alapján külön osztályba, a \emph{ModelLoader}be szerveztem a modell betöltését.
+		Erre többféle megoldási lehetőség van. Például kötelezhetjük a Tensorflowt globális default gráf használatára. Mivel ez a megoldás csak részben működött, más javaslat alapján külön osztályba, a \emph{ModelLoader}be szerveztem. Ez az osztály felelős a modell betöltéséért illetve ez végzi el a predikciót.
 		\newline	
 
 	\begin{itemize}
-		\item load(): Betölti az paraméterként kapott útvonalon található modellt.
-		\item predict(): A bemenetet és a választott modell alapján visszaadja a kimenetet.  
+		\item load(file\_name): Betölti az paraméterként kapott útvonalon található modellt.
+		\item predict(model\_input, model): A bemenet és a választott modell alapján visszaadja a prediktált kimenetet.  
 	\end{itemize}
 
 		A \emph{ModelLoader} objektum inicializálásakor betölti a sziámi és a sima konvolúciós modellt is. Később a predict() függvényben paramétereiben állíthatjuk be, hogy melyik modellen szeretnénk a predikciót végrehajtani.
+		
+	\item \emph{preprocess.py}:
+		
+		\begin{itemize}
+		\item \emph{whiten(batch, rms)}: A \emph{whiten} standardizálja a hangmintákat. Egy hangmintát egész számok sorozata reprezentál (PCM kódolás 4 vagy 16 biten). Először kivonja az átlagot minden számból, így a hangminta átlaga 0 lesz. Ezután újraskálázza a számokat, hogy ne legyenek kiugró amplitúdó értékek.
+		\newline
+		\item \emph{preprocess\_instances(downsampling, whitening)}: A \emph{preprocess} függvénynek két fő paramétere van: a hangminta hossza és a \emph{downsampling}, vagyis a csökkentett mintavételezési ráta. Ez a függvény végzi el a csökkentett mintavételezést és a standardizálást egy hangmintán.
+		\newline
+		\newline
+		A csökkentett mintavételezés az eltérő mintavételi frekvencia miatt szükséges. Az Androidot futtató készülékek $8$ és $16$ bites PCM mellett $8$, $16$ és $44.1$ kHz-es mintavételi frekvenciákat támogatnak. Esetünkben a modellt $4$ kHz-en tanították a saját hangminták pedig $8$ kHz-esek ezért $2$-es csökkentett mintavételezés szükséges.
+		\newline
+		\item \emph{BatchPreProcessor(mode, instance\_preprocessor, target\_preprocessor)}: Ez az osztály wrapper funckiót lát el. Ez segít abban, hogy egységesen tudjuk kezelni az (inputs, outputs) klasszifikációs batcheket és a ([inputs\_1, inputs\_2], outputs) sziámi típusúakat is. A \emph{mode} paraméterrel megadjuk, hogy milyen típusú batchek előfeldolgozását szeretnénk. Az \emph{instance\_preprocessor} a bemenetek, a \emph{target\_preprocessor} a kimeneteket preprocesszáló függvény. Például \emph{BatchPreProcessor('classifier', preprocess\_instances(downsampling))}.
+		\newline
+		\item \emph{preprocess(audio\_file, sample\_length, downsampling)}: 
+		Ez a függvény hatja végre a preprocesszálást. Beolvassa a paraméterként megadott hangmintát. A hangminta közepén \emph{sample\_length} hosszúságú darabot vág ki belőle. Létrehoz egy \emph{BatchPreProcessor} objektumot, előfeldolgozza a batchet, majd visszatér a feldolgozott hangmintával.
+		\newline
+		\newline
+		Mivel a jelenleg használt modell $3$ másodperces és $4$ kHz-en mintavételezett hangmintákat vár a bemenetére, a saját $4$ másodperces hangmintákból $3$ másodperces darabokat vág ki a közepétől számolva $1,5$-$1,5$ másodperces távolságra. Erre azért van szükség, hogy ha a felhasználó kicsit később kezd el beszélni vagy hamarabb hagyja abba, a felvétel elején vagy végén lévő szünet ne kerüljön bele a mintába.
+		\end{itemize}
 \end{itemize}
 
-A \emph{preprocess} függvénynek két fő paramétere van: a hangminta hossza és a \emph{downsampling}, vagyis a csökkentett mintavételezési ráta. Mivel a jelenleg használt modell $3$ másodperces és $4$ kHz-en mintavételezett hangmintákat vár a bemenetére, a saját $4$ másodperces hangmintákból $3$ másodperces darabokat vág ki a közepétől számolva $1,5$-$1,5$ másodperces távolságra. Erre azért van szükség, hogy ha a felhasználó kicsit később kezd el beszélni vagy hamarabb hagyja abba, a felvétel elején vagy végén lévő szünet ne kerüljön bele a mintába.
+\subsection{Fejlesztési környezet}
+
+Ebben a fejezetben bemutatom a fejlesztéshez használt technológiai stacket. Szó lesz a szerver oldali és a kliens alkalmazáshoz használt toolokról, környezetekről.
+
+\subsection{Git}
+
+A Git egy nyílt forráskódú verziókezelő, ami a fejlesztésben rendkívül fontos. A verziókezelés nem csak akkor hasznos, ha többen dolgoznak egy projekten. Egyéni kódbázist
+refaktorálás után ezáltal visszaállíthatunk, törölt fájlokat, kódrészleteket követhetünk vissza. A saját repositorymat GitHubon tároltam.
+
+\subsubsection{Amazon EC2}
+
+A webszerver a \ref{cloud_or_local} fejezet alapján Amazon EC2-es virtuális gépen fut. Az Amazon Elastic Compute Cloud szolgáltatás biztonságos és skálázható számítási kapacitást nyújt felhőben. Virtuális gépek bérelhetők rajta, amelyek utána testreszabhatók tárhely és erőforrások; processzor, memória szempontjából.
 \newline
-
-A csökkentett mintavételezés az eltérő mintavételi frekvencia miatt szükséges. Az Androidot futtató készülékek $8$ és $16$ bites PCM mellett $8$, $16$ és $44.1$ kHz-es mintavételi frekvenciákat támogatnak. Esetünkben a modellt $4$ kHz-en tanították a saját hangminták pedig $8$ kHz-esek ezért $2$-es csökkentett mintavételezés szükséges.
-
-Az \emph{identify} útvonalra érkező kéréseket a \emph{identify} függvény fogadja. Menti majd preprocesszálja a hangfájlt, meghívja a predickciót és visszatér az eredménnyel.
-
-A \emph{predict} függvény feladata a predikció elvégzése. Paraméterként a felhasználó azonosítóját kapja. Ez alapján párokat képez az azonosítandó felhasználó és a többi regisztrált felhasználó hangmintáiból és ezeket a modell bemenetére adja. A modell minden egyes párhoz kiszámol egy hasonlósági vektort. Ezeket és a hasonlósági küszöböt figyelembe véve dönt az eredményről.
 \newline
+A felhasználók létrehozhatnak saját virtuális gépeket, amelyeken saját alkalmazásokat futtathatnak. Többféle fizetési modell közül választhatunk: Létezik óra vagy másodperc alapú, de saját dedikált gépet is bérelhetünk. Az AWS Educate segítségével diákok korlátozottan de ingyenesen használhatják az Amazon EC2 szolgáltatásokat egy megadott kreditszintig.
+\newline
+\newline
+A virtuális gépen Ubuntu 16.04 operációs rendszer fut és ssh-n keresztül férhetünk hozzá. Ehhez a gép létrehozásakor lehet új kulcspárt generálni vagy meglévőket használni. A gép bootolásakor a publikus kulcs bekerül a \emph{~/.ssh/authorized\_keys} fájlba. Később ssh-nál a saját privát kulcsunkat megadva tudunk autentikálin. A virtuális menedzselése az AWS Console-on keresztül történik. A gépen futó Flask szerver portján engedélyezni kellett a be és kimenő forgalmat. Ehhez létre kell hozni egy új \emph{Security Groupot}, majd hozzáadni a megfelelő \emph{Rule}-t.
+\newline
+\newline
+Az alkalmazás szempontjából nagy előny, hogy a felhőbeli gépet könnyen elérjük, és fejlesztés közben sem a saját gépünk erőforrásait használja. Hátránya, hogy a kényelmes remote fejlesztés több konfigurációt igényel.
 
-A \emph{preprocess.py} szkript tartalmaz egy whiten() nevű függvényt, ami standardizálja a hangmintákat. Egy hangmintát egész számok sorozata reprezentál (PCM kódolás 4 vagy 16 biten). Először kivonja az átlagot minden számból, így a hangminta átlaga 0 lesz. Ezután újraskálázza a számokat, hogy ne legyenek kiugró amplitúdó értékek.
+\subsubsection{cmder}
 
-A \emph{preprocess\_instances} végzi el a standardizálást és a csökkentett mintavételezést. A \emph{BatchPreProcessor} objektum pedig egy wrapper osztály, hogy az előfeldolgozást sziámi hálózatokhoz és sima osztályozó hálózatokhoz készült \emph{([input1, input2], output)} és \emph{(inputs, outputs)} formában is könnyedén elvégezhessük.
+A cmder egy Windowshoz készült konzol emulátor. Beépített Gittel és ssh-klienssel rendelkezik és több Linuxos parancsot is támogat. Használata sokkal kényelmesebb a Puttynál, könnyedén csatlakozhatunk vele a Linuxos géphez.
+\newline
+\newline
+Az ssh klienst paraméterezni kell a privát kulcsunkkal és a timeout elkerülése érdekében saját ssh konfigurációs fájllal.
+Eleinte probléma volt az ssh kapcsolat lejárási ideje, de ez kliens és szerveroldalon is könnyen konfigurálható. Linuxon a \emph{/etc/ssh/sshd\_config}-ban a \emph{ClientAliveInterval <seconds>} és \emph{ClientAliveCountMax <seconds>}, Windowson (jelen esetben kliens oldalon) a paraméterben megadott konfigurációs fájlban \emph{ServerAliveInterval <seconds>} és 
+\emph{ServerAliveCountMax <seconds>} beállításokkal küszöbölhető ki.
+
+\subsubsection{Anaconda}
+
+Az Anaconda egy nyílt forráskódú Python és R disztribúció, amely több mint 1500 programcsomaggal, saját csomagkezelővel, grafikus felülettel és virtuális környezetkezelővel rendelkezik.
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=150mm, keepaspectratio]{figures/anaconda-overview.png}
+	\caption{Flask szerver: Osztálydiagram.}
+	\label{fig:anaconda-overview}
+\end{figure}
+
+Támogatja a gépi tanulást, tartalmazza a fontos gépi tanulási csomagokat (Keras, Tensorflow, Pytorch stb.), jupyter nootebookot. A virtuális környezetkezelővel a projekteknek külön virtuális környezetet hozhatunk létre. Ez fontos a verziók ütközésének elkerülése végett; Ha egy adott projektet Python 2.7-et használ, egy másik pedig Python 3.6-ot vagy ugyanolyan de eltérő verziójú programcsomagokat, akkor érdemes külön környezetet létrehozni nekik. A környezetek között a parancssorban navigálhatunk, csomagokat telepíthetünk rajtuk.
+
+Az Anaconda Cloud további csomagokat, környezeteket, publikus és privát notebookokat tartalmaz. Ide feltölthetünk sajátot, illetve kereshetünk, telepíthetünk közülük csomagokat, környezeteket a saját gépünkre, környezetünkre.
+
+\subsubsection{JetBrains PyCharm}
+
+A JetBrain PyCharm egy Python programozási nyelvhez készült IDE. Azért esett erre a választás, mert van benne automatikus kódkiegészítés, intelligens kód navigáció - definícióra vagy használatra ugrás - és kód refaktorálás. Utóbbi a kód formázását és az importált csomagok rendezését jelenti.
+\newline
+\newline
+Új projekt létrehozásakor saját virtuális környezetet hoz létre, de megadhatunk neki anaconda által létrehozottat, azt is képes kezelni. Jelen esetben a legfontosabb funkció a remote fejlesztés integrált támogatása volt.
+\newline
+\newline
+A projekt beállításokban új Deployment létrehozásakor megadható a virtuális gép címe és a privát kulcs ssh-hoz. Megadhatók a lokális a remote mappák közötti mappingek és részletes szinkronizációs beállítások. A projekt interpreterének a remote gépen lévő Anaconda virtuális környezete által használt Python interpretert kell megadni, ez alapján a PyCharm feloldja a hozzá tartozó környezetet, látni fogja a programcsomagokat.
+\newline
+\newline
+Szintén hasznos funckió a remote debugger, aminek segítségével a távoli virtuális gépen futó alkalmazást tudjuk debuggolni lokálisan.
+
+
+\subsection{Android Studio}
+
+\subsection{Genymotion}
+

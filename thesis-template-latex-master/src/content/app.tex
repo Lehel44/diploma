@@ -26,16 +26,16 @@ Ha már rendelkezünk egy működő modellel, akkor el kell döntenünk, hogy a 
 \begin{itemize}
 	\item A hálózati kapcsolatot tekintve ha a predikciót lokálisan végezzük, nincs szükség internetkapcsolatra, predikció a készüléken történik. Ellenkező esetben a kliens interneten keresztül kérést küldd a szervernek, ami elvégzi a predikciót és visszaküldi a választ.
 	\item A modellt felhőben a szerveren tárolni biztonságosabb. Lokális predikció esetén a modellt a készüléken tároljuk. Ilyenkor gondoskodni kell a biztonságáról, hogy ne lehessen visszafejteni azt (reverse engineering).
-	\item A predikció sebessége is meghatározó szempont. Ha lokálisan, a mobiltelefon hatja végre, a felhőhöz képest kisebb erőforrással gazdálkodunk, ami miatt lassabb lesz a számítás. Viszont ha a felhőben végezzük, a kommunikációs overhead hozzáadódik a válaszhoz. Le kell mérni, hogy a kliens-szerver kommunikáció késleltetése mekkora az erőforráskülönbségből származó számítási időkhöz képest.
+	\item A predikció sebessége is meghatározó szempont. Ha lokálisan, a mobiltelefon hajtja végre, a felhőhöz képest kisebb erőforrással gazdálkodunk, ami miatt lassabb lesz a számítás. Viszont ha a felhőben végezzük, a kommunikációs overhead hozzáadódik a válaszhoz. Le kell mérni, hogy a kliens-szerver kommunikáció késleltetése mekkora az erőforráskülönbségből származó számítási időkhöz képest.
 	\item Az alkalmazás architektúráját tekintve ha a modell és a predikció a szerveren történik, bármikor frissíthetjük, finomhangolhatjuk a modellt és ehhez nem kell a felhasználóknak frissítéseket letölteniük. Nincs szükség szinkronizációra. Az alkalmazás elosztott, elkülönült backend és frontend részekből áll, amelyek egy interfészen keresztül kommunikálnak, így ezek a komponensek lecserélhetők, csak az interfészt kell implementálniuk (API).
 	\item Felhőbeli erőforrásokat használva az árat is figyelembe kell venni. Minél több felhasználó használ egy alkalmazást és amennyiben a számítás központilag a felhőben történik, annál több erőforrásra van szükség. Nagy előnye a készüléken végzett predikciónak, hogy jól skálázódik. Több felhasználó esetén nincs szükség több erőforrásra.
 \end{itemize}
 
-Jelen alkalmazás egy beszélőfelismerő szoftvert szemléltet, amelyet a valóságban vállalatok üzemeltetnek beléptető kapuval biometrikus azonosításként. Központi szerverre szükség van a regisztrált felhasználók adatainak biztonságos tárolása és a könnyű szinkronizáció miatt. Ha feltesszük, hogy a beléptető rendszert nem több mint tízezer ember azonosítására használják és a belépés szekvenciálisan történik, óriási erőforrásokat sem kell használni, mert a szerver egy időben legfeljebb a beléptető kapuk száma szerinti számítást kell végezzen, ami korlátos. Ezeket figyelembe véve úgy döntöttem, hogy a modell tárolása és a predikció szerveren fog történni.
+Jelen alkalmazás egy beszélőfelismerő szoftvert szemléltet, amelyet a valóságban vállalatok üzemeltetnek beléptető kapuval biometrikus azonosításra használva. Központi szerverre szükség van a regisztrált felhasználók adatainak biztonságos tárolása és a könnyű szinkronizáció miatt. Ha feltesszük, hogy a beléptető rendszert nem több mint tízezer ember azonosítására használják és a belépés szekvenciálisan történik, óriási erőforrásokat sem kell használni, mert a szerver egy időben legfeljebb a beléptető kapuk száma szerinti számítást kell végezzen, ami korlátos. Ezeket figyelembe véve úgy döntöttem, hogy a modell tárolása és a predikció szerveren fog történni.
 
 \section{Alkalmazás architektúra és általános működés}
 
-Mivel az alkalmazás tárolja a regisztrált felhasználók hangmintáit és a modellt; a biztonság, a könnyű központi adminisztráció és hogy nincs szükség szinkronizációra mind megerősíti a kliens-szerver architektúra szükségességét és előnyeit, így peer-to-peer megoldás fel sem merült.
+Mivel az alkalmazás tárolja a regisztrált felhasználók hangmintáit és a modellt; a biztonság, a könnyű központi adminisztráció és a tény, hogy nincs szükség szinkronizációra mind megerősíti a kliens-szerver architektúra szükségességét és előnyeit, így peer-to-peer megoldás fel sem merült.
 
 \begin{figure}[!ht]
 	\centering
@@ -47,9 +47,9 @@ Mivel az alkalmazás tárolja a regisztrált felhasználók hangmintáit és a m
 A \ref{fig:app-register} ábrán látható kliens a felhőben futó szerverrel egy REST API-n keresztül kommunikál. A kliens segítségével a felhasználó regisztrál a rendszerbe, ezután azonosíthatja magát. A regisztrációs fázis működése a következő:
 
 \begin{enumerate}
-	\item A felhasználó hangját és nevét a kliens alkalmazás rögzíti.
+	\item A kliens alkalmazás rögzíti a felhasználó hangját és nevét.
 	\item A kliens a hangmintát és a nevet elküldi a szervernek a REST API-n keresztül.
-	\item A szerver előfeldolgozza a hangfájlt, majd menti a névvel együtt az adatbázisba.
+	\item A szerver előfeldolgozza a hangfájlt, a modell segítségével hangvektort készít belőle és menti az adatbázisba. 
 \end{enumerate}
 
 Miután a felhasználók regisztráltak, az alkalmazás a hangjuk alapján azonosítani tudja őket. Az azonosítási fázis lépéseit a \ref{fig:app-identify} ábra mutatja.
@@ -64,11 +64,56 @@ Miután a felhasználók regisztráltak, az alkalmazás a hangjuk alapján azono
 \begin{enumerate}
 	\item A kliens rögzíti az azonosítani kívánt felhasználó hangját.
 	\item A hangmintát továbbítja a szervernek.
-	\item A szerveren futó alkalmazás a hangfájlt előfeldolgozza és eltárolja.
-	\item A hangmintákat az adatbázisból betölti és azonosítandó - nem azonosítandó párokat készít belőle.
-	\item A hangminta párokat a modell bemenetére adja.
-	\item A modell kiszámolja a hangminták közötti hasonlósági pontokat. Ezután az alkalmazás a hasonlósági küszöbszámot figyelembe véve dönt arról, hogy azonosítható-e a felhasználó.
-	\item A szerver válaszol az azonosított felhasználó nevével, vagy közli, hogy a felhasználó nincs a rendszerben.
+	\item A szerveren futó alkalmazás a hangfájlt előfeldolgozza és hangvektort készít belőle.
+	\item A szerver kiszámolja a hangminták közötti hasonlósági pontokat. A minimálishoz tartozó felhasználó nevét elküldi a kliensnek.
+\end{enumerate}
+
+\subsection{Biztonsági funkciók}
+
+Azt is figyelembe kell venni, hogy azonosításkor a szerver a minimális vektortávolsághoz tartozó névvel tér vissza. Ez azt jelenti, hogy ha egy regisztrált felhasználó van a rendszerben,
+bárki képes lenne belépni a regisztrált felhasználó nevében, hiszen csak egy távolság van, ami minimális. Ennek elkerülésére további biztonsági funkciókkal kell kiegészíteni az alkalmazást;
+
+Meg kell határozni egy biztonsági küszöböt a vektorok távolságára - azaz ha nem elég hasonlóak, egyéb autentikációs mechanizmusra lesz szükség. Ennek megfelelően a szervert
+kiegészítettem egy biztonsági küszöbbel, amit ha azonosításkor a vektortávolság nem ér el, jelszó alapú azonosítást kér a felhasználótól. A biztonsági funkcióval kiegészített
+működés abban az esetben, ha a biztonsági küszöböt nem éri el az alkalmazás a \ref{fig:app-with-security} ábrán látható. A regisztrációs fázis annyiban tér el az előzőtől, hogy a felhasználó egy jelszót is megad a neve mellett, amit
+a szerver eltárol.
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=100mm, keepaspectratio]{figures/app-with-security.png}
+	\caption{Beszélőfelismerő alkalmazás: Azonosítás jelszó alapú autentikációval.}
+	\label{fig:app-with-security}
+\end{figure}
+
+\subsection{Vektorok átlagolása}
+
+A szerver oldali alkalmazás minden sikeres azonosítás után átlagolja a tárolt vektort az aktuális azonosítottal. Azonosításkor ha a hasonlósági pontszám
+a biztonsági küszöb alatt van, az átlagolás minden további nélkül megtörténik.
+Amennyiben a minimális vektortávolság nem üti meg a küszöbszintet az alkalmazás az aktuális vektort ideiglenesen eltárolja. Ezután ha a felhasználó sikeresen autentikál jelszóval, a vektort átlagolja a korábbival majd törli, egyébként csak törli azt.
+
+
+\subsection{Konfiguráció}
+
+A szerver oldali alkalmazás képes többféle hasonlósági pontot számolni
+a vektorok között. A jelenlegi implementáció a következő hasonlósági pontokat támogatja $v_1=(x_1, x_2, \dots)$ és $v_2=(y_1, y_2, \dots)$.
+
+\begin{itemize}
+	\item Euklideszi-távolság: $$d_{euc}(v_1, v_2) = \left (\sum_{i=1}^{n} x_i - y_i \right) ^\frac{1}{2}$$
+	\item Koszinusz-távolság: $$d_{cos}(v_1, v_2) = \frac{v_1 \cdot v_2}{\left\lVert v_1 \right\rVert \cdot \left\lVert v_2 \right\rVert} = \frac{\sum_{i=1}^{n} x_i \cdot y_i}{\sqrt{\sum_{i=1}^{n} x_i^2} \cdot \sqrt{\sum_{i=1}^{n} y_i^2}}$$
+\end{itemize}
+
+Konfigurálható továbbá a biztonsági küszöbszám is. Ez azon értéke, melyet
+ha a hasonlósági pontszám nem ér el, a szerver jelszó alapú autentikációs kérést küld a kliens fele.
+
+\begin{enumerate}
+	\item A kliens rögzíti az azonosítani kívánt felhasználó hangját.
+	\item A hangmintát továbbítja a szervernek.
+	\item A szerveren futó alkalmazás a hangfájlt előfeldolgozza és hangvektort készít belőle.
+	\item A szerver összehasonlítja a hangvektort a korábban eltároltakkal és kiszámol egy hasonlósági pontot vagy vektortávolságot.
+	\item A pontszám nem éri el a biztonsági küszöböt, ezért kliensnek felszólítást küld, hogy jelszó alapú autentikációt kér.
+	\item A kliens megadja a saját jelszavát, amivel  korábban regisztrált és elküldi a szervernek.
+	\item A szerver ellenőrzi, hogy a megadott jelszó valóban az azonosítani kívánt felhasználóhoz tartozik-e. Amennyiben igen, visszaküldi az azonosított felhasználó nevét,
+	egyébként jelzi, hogy az autentikáció sikertelen volt.
 \end{enumerate}
 
 \section{Felhasznált modellek}
@@ -287,7 +332,25 @@ Szerver oldalon egy Flask webalkalmazás fut felhőben és REST API-val rendelke
 
 A Flask egy Python nyelvhez készült web mikrokeretrendszer. Mikrokeretrendszernek nevezzük a minimális webalkalmazás keretrendszereket, amelyekből általában hiányoznak a autentikációs, autorizációs könyvtárak, az objektum-relációs leképzés stb.
 
+A Flask két fő BSD-licencelt komponensre épül:
+
+\begin{itemize}
+	\item Werkzeug: A Werkzeug egy Python toolkit WSGI alkalmazásokhoz. Keretrendszereket lehet építeni rá és többféle Python verziót támogat. A WSGI egy hívási konvenció Pythonban írt webalkalmazásokhoz történő kérésekre.
+	\item Jinja: Web template engine Python alkalmazásokhoz.
+\end{itemize}
+
 A Flask előnye, hogy nagyon gyorsan és könnyedén lehet vele REST API-t készíteni és elindítani egy webalkalamzást. Nincs szükség más könyvtárakra, toolokra hozzá.
+
+Képes egyszerre több kérést is kezelni. Külön sessionökből érkező kérések külön szálakon futnak, így a keretrendszer a szálkezelést is megoldja helyettünk. A következő fontosabb funkciókat biztosítja:
+
+\begin{itemize}
+	\item Webszerver fejlesztésre és debugger
+	\item Unit tesztek integrált támogatása
+	\item REST támogatása
+	\item Jinja2 template weboldalakhoz
+	\item WSGI 1.0 szabvány
+	\item Jól dokumentált
+\end{itemize}
 
 \subsubsection{Projekt felépítése}
 
@@ -296,16 +359,19 @@ A Flask előnye, hogy nagyon gyorsan és könnyedén lehet vele REST API-t kész
 	
 	\begin{itemize}
 		\item app/app.py
+		\item app/model\_loader.py
 		\item app/preprocess.py
 		\item app/config.py
+		\item app/paths.py
 	\end{itemize}
 	
-	\item \emph{data}: Tartalmazza a klienstől regisztrációs és azonosítani kívánt \emph{wav} fájlokat és a preprocesszált állományokat.
+	\item \emph{data}: Tartalmazza a klienstől regisztrációs fázisban kiszámolt vektorokat, az átlagolásra váró vektorokat és felhasználói adatokat.
 	
 	\begin{itemize}
-		\item data/wav: Az eredeti, klienstől érkezett hangfájlok.
-		\item data/preprocessed\_audio: Az előfeldolgozott hangfájlok. 
-		\item data/identify: Az azonosítandó felhasználóhoz tartozó hangfájlok.
+		\item data/vectors: Az előfeldolgozott hangfájlok.
+		\item data/vectors\_to\_average: Az átlagolásra váró, ideiglenesen tárolt vektorok helye.
+		\item user\_dict: Felhasználó UID - felhasználónév összerendeléseket tartalmazó dictionary.
+		\item passwords: Felhasználó UID - jelszó párokat tartalmazó dictionary.
 	\end{itemize}
 	
 	\item \emph{model}: A beszélőfelismerésre használt modelleket tároló mappa.
@@ -313,7 +379,14 @@ A Flask előnye, hogy nagyon gyorsan és könnyedén lehet vele REST API-t kész
 
 \subsubsection{Részletes működés}
 
-Az \emph{app.py} szkript négy fontos függvényt tartalmaz. Ezek közül az \emph{enroll} és az \emph{identify} függvények a REST API-t implementálják, a \emph{preprocess} a hangfájlok előfeldolgozását, a \emph{predict} a prediktálást végzi.
+Az alkalmazás a következő REST végpontokat biztosítja a kliens számára:
+
+\begin{itemize}
+	\item /enroll: A regisztráció végpontja.
+	\item /identify: Az azonosítási végpont.
+	\item /authenticate: A jelszó alapú autentikáció végpontja.
+\end{itemize}
+
 
 \begin{figure}[!ht]
 	\centering
@@ -322,18 +395,61 @@ Az \emph{app.py} szkript négy fontos függvényt tartalmaz. Ezek közül az \em
 	\label{fig:flask-class-diag}
 \end{figure}
 
-Az \emph{app.py} először létrehoz egy Flask objektumot, ezután betölti a megfelelő konfigurációt a \emph{config.py} szkriptben deklarált valamelyik objektummal. Betölti a modellt, majd elindítja az alkalmazást, ami a \emph{/enroll} és \emph{/identify} útvonalakon \emph{POST} kérésekre vár.
+\begin{itemize}
+	\item \emph{app.py}: Az \emph{app.py} implementálja a REST végpontokat. Az \emph{app.py} először létrehoz egy Flask objektumot, ezután betölti a megfelelő konfigurációt a \emph{config.py} szkriptben deklarált valamelyik objektummal. Betölti a modellt, majd elindítja az alkalmazást, ami a \emph{/enroll} és \emph{/identify} útvonalakon \emph{HTTP POST} kérésekre vár.
+	
+	Mivel az alkalmazás egy prototípus és nincs szükség felhasználóspecifikus adatok tárolására néven és jelszón kívül, adatbázis helyett \emph{dictionary} tárolja az egyedi azonosító - felhasználónév illetve egyedi azonosító - jelszó párokat egy fájlba szerializálva, a hangvektorok pedig egyedi azonosítónévvel vannak eltárolva.
+	
+	\begin{itemize}
+		\item \emph{enroll()}: Regisztrációkor megkapja a klienstől a hangmintát, a nevet és a jelszót. Amennyiben a hangminta nem támogatott formátumú, HTTP 400 (Bad Request) státuszkóddal válaszol. 
+		\newline
+		\newline
+		Egyébként a felhasználónak létrehoz egy egyedi azonosítót és elmenti a jelszavát az \emph{passwords} dictionarybe. Preprocesszálja a hangmintát, a modell segítségével hangvektort készít belőle majd eltárolja. 
+		\newline
+		\newline
+		A hangvektorok bináris formátumban kerülnek mentésre egyedi azonosító néven, így könnyen visszakereshetők.
+		\newline
+		\newline
+		Végül frissíti a \emph{user\_dict} dictionaryt az aktuális felhasználó nevével és azonosítójával.
+		\newline
+		\item \emph{identify()}: A kliens ide küldi a hangmintát azonosításra. Amennyiben a hangminta nem támogatott formátumú, HTTP 400 (Bad Request) státuszkóddal válaszol. Ha a hangminta támogatott preprocesszálja, majd hangvektort készít belőle. Összehasonlítja a korábban regisztrált felhasználók hangvektorjaival, és megkeresi a minimális hasonlósági pontszámot. 
+		\newline
+		\newline
+		Ha a minimális távolság meghaladja a biztonsági küszöböt, az aktuális vektort menti későbbi lehetséges átlagolás céljából. Ezután jelszó alapú autentikációs kérést küldd a kliensnek HTTP 403 (Forbidden) státuszkóddal. Mivel a HTTP protokoll állapotmentes, a kérés fejlécében elküldi a minimális távolsághoz tartozó felhasználó azonosítóját is az egyszerűség kedvéért (session kezelés helyett).
+		\newline
+		\newline
+		Ha a minimális távolság a biztonsági küszöbön belül van, azaz az azonosítás sikeres volt, átlagolja az aktuális hangvektort az azonosítottal és HTTP 202 (Accepted) státuskóddal illetve a fejlécben az azonosított felhasználó nevével és egyedi azonosítójával válaszol.
+		\newline
+		\item \emph{authenticate()}: A \emph{/authenticate} végpontra küldött jelszó alapú autentikáció esetén hívódik meg. A klienstől érkező kérés tartalmazza az azonosítani kívánt felhasználó UID-t és a jelszót. Ellenőrzi, hogy a küldött jelszó megegyezik-e a korábban eltárolttal.
+		\newline
+		\newline
+		Amennyiben igen, az autentikáció elején eltárolt hangvektort átlagolja a korábbival, majd HTTP 202 (Accepted) státuskóddal illetve a fejlécben az azonosított felhasználó nevével és egyedi azonosítójával válaszol.
+		\newline
+		\newline
+		Ha a jelszavas autentikáció nem sikerült, törli az átlagolásra váró hangvektort és HTTP 403 (Forbidden) státuszkóddal válaszol a kliensnek.
+	\end{itemize}
 
-Mivel az alkalmazás egy prototípus és nincs szükség felhasználóspecifikus adatok tárolására néven kívül, adatbázis helyett egy \emph{dictionary} tárolja az egyedi azonosító - felhasználónév párokat egy fájlba szerializálva, a hangfájlok pedig egyedi azonosítónévvel vannak eltárolva.
+	\item emph{model\_loader.py}:
+		A fejlesztés kezdetén a modell betöltése a \emph{app.py}-ban volt implementálva. Mivel a Flask több szálat használ, problémát okozott, hogy a modellt valamelyik függvény hamarabb használta minthogy azt valóban betöltötte volna.
+		\newline
+		\newline
+		Erre többféle megoldási lehetőség van. Például kötelezhetjük a Tensorflowt globális default gráf használatára. Mivel ez a megoldás csak részben működött, más javaslat alapján külön osztályba, a \emph{ModelLoader}be szerveztem a modell betöltését.
+		\newline	
 
-Ha egy kérés az \emph{enroll} útvonalon érkezik, az alkalmazás létrehoz egy egyedi azonosítót, és ezen a néven menti az audiofájlt. Ezután az azonosítókat és neveket tartalmazó \emph{dictionaryt} kiegészíti az aktuális bejegyzéssel. Az hangfájlt preprocesszálja, majd ha minden rendben ment visszatért egy \emph{Http OK (200)} státuszüzenettel.
+	\begin{itemize}
+		\item load(): Betölti az paraméterként kapott útvonalon található modellt.
+		\item predict(): A bemenetet és a választott modell alapján visszaadja a kimenetet.  
+	\end{itemize}
+
+		A \emph{ModelLoader} objektum inicializálásakor betölti a sziámi és a sima konvolúciós modellt is. Később a predict() függvényben paramétereiben állíthatjuk be, hogy melyik modellen szeretnénk a predikciót végrehajtani.
+\end{itemize}
 
 A \emph{preprocess} függvénynek két fő paramétere van: a hangminta hossza és a \emph{downsampling}, vagyis a csökkentett mintavételezési ráta. Mivel a jelenleg használt modell $3$ másodperces és $4$ kHz-en mintavételezett hangmintákat vár a bemenetére, a saját $4$ másodperces hangmintákból $3$ másodperces darabokat vág ki a közepétől számolva $1,5$-$1,5$ másodperces távolságra. Erre azért van szükség, hogy ha a felhasználó kicsit később kezd el beszélni vagy hamarabb hagyja abba, a felvétel elején vagy végén lévő szünet ne kerüljön bele a mintába.
 \newline
 
 A csökkentett mintavételezés az eltérő mintavételi frekvencia miatt szükséges. Az Androidot futtató készülékek $8$ és $16$ bites PCM mellett $8$, $16$ és $44.1$ kHz-es mintavételi frekvenciákat támogatnak. Esetünkben a modellt $4$ kHz-en tanították a saját hangminták pedig $8$ kHz-esek ezért $2$-es csökkentett mintavételezés szükséges.
 
-A \emph{identify} útvonalra érkező kéréseket a \emph{identify} függvény fogadja. Menti majd preprocesszálja a hangfájlt, meghívja a predickciót és visszatér az eredménnyel.
+Az \emph{identify} útvonalra érkező kéréseket a \emph{identify} függvény fogadja. Menti majd preprocesszálja a hangfájlt, meghívja a predickciót és visszatér az eredménnyel.
 
 A \emph{predict} függvény feladata a predikció elvégzése. Paraméterként a felhasználó azonosítóját kapja. Ez alapján párokat képez az azonosítandó felhasználó és a többi regisztrált felhasználó hangmintáiból és ezeket a modell bemenetére adja. A modell minden egyes párhoz kiszámol egy hasonlósági vektort. Ezeket és a hasonlósági küszöböt figyelembe véve dönt az eredményről.
 \newline

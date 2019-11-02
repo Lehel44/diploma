@@ -1,7 +1,20 @@
-[app.py|enroll();identify();preprocess();predict()]
+[app.py|enroll();identify();authenticate();]
+
+[preprocess.py|preprocess_instances();BatchPreProcessor:class;whiten();preprocess();]
+
+[compute.py|compare_vectors();update_distances();]
 [preprocess.py|preprocess_instances();BatchPreProcessor:class;whiten()]
+
+[model_loader.py|load();predict();]
+
+
 
 [config.py|Config:class;ProductionConfig:class;DevelopmentConfig:class;TestingConfig:class]
 
 [app.py]->[config.py]
 [app.py]->[preprocess.py]
+[app.py]->[compute.py]
+[app.py]->[util.py]
+[app.py]->[model_loader.py]
+
+[compute.py]->[util.py]

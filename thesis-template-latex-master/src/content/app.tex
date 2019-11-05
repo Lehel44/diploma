@@ -116,116 +116,6 @@ ha a hasonlósági pontszám nem ér el, a szerver jelszó alapú autentikáció
 	egyébként jelzi, hogy az autentikáció sikertelen volt.
 \end{enumerate}
 
-\section{Felhasznált modellek}
-
-\subsection{Voicemap}
-
-A \emph{voicemap} egy beszélőfelismerő GitHub repository, ami tartalmazza a modell kódját, a tanítást, különböző teszteket és egy optimalizált előre tanított modellt. Az implementációhoz \emph{Kerast} használ.
-
-\subsubsection{Az implementált modellek}
-
-Két modellt vizsgál; egy sziámi neurális hálózatot és egy sima konvolúciósat klasszifikációval. A sziámi hálózat alapja egy konvolúciós enkóder, amely a nyers hangmintákból kinyeri a jellemzőket és egy hangvektorokat állít elő belőlük. Az enkóder hálózat a következő konvolúciós blokkokból áll:
-
-\begin{itemize}
-	\item Conv1D 32-es méretű filterekkel, ahol a filterek száma szorzódik a blokk számával. Az aktivációs függvény \emph{ReLu}.
-	\item BatchNormalization
-	\item SpatialDropout1D
-	\item MaxPool1D
-\end{itemize}
-
-Négy ilyen konvolúciós blokk követi egymást, majd egy \emph{GlobalMaxPool1D} és egy \emph{Dense} réteg a hangvektor méretével.
-
-A sziámi hálózat alapja két enkóder hálózat, amelynek súlyai megosztottak, tehát úgy is tekinthetünk rá, hogy egy enkóder hálózatra két bemenetet adhatunk. A hangminták a hálózaton áthaladva jellemző vektorokká alakulnak. Ezt a részt a konvolúciós enkóder végzi. Ezután a két vektor közötti távolságot a sziámi hálózat kiszámolja.
-
-Az implementált távolságmetrikák a következők:
-
-\begin{itemize}
-	\item \emph{weighted\_l1}: Az eredeti one-shot cikk szerinti távolságmetrika.
-	\item \emph{uniform\_euclidean}: Euklideszi távolság két vektor között.
-	\item \emph{cosine\_distance}: Koszinusz távolság, azaz a két vektor által bezárt szög koszinuszát méri.
-\end{itemize}
-
-A kiszámolt távolság ezután minden esetben áthalad egy szigmoid aktivációs függvényű \emph{Dense} rétegen, ami $0$ és $1$ közé nyomja az eredményt.
-
-\subsubsection{A k-way n-shot feladat}
-
-A repository tartalmaz egy utility szkriptet a hangminták preprocesszálásához és few-shot kiértékeléshez, amit később a saját alkalmazásomban is felhasználtam. Ez tartalmazza többek között az \emph{n\_shot\_task\_evaluation} függvényt is, ami \emph{k-way n-shot} feladatokkal teszteli a modellt. Az alábbi argumentumokat adhatjuk meg:
-
-\begin{itemize}
-	\item  \emph{model}: A tesztelendő modell.
-	\item  \emph{dataset}: A tesztmintákat tartalmazó adathalmaz objektum.
-	\item  \emph{preprocessor}: Előfeldolgozó függvény a minták csökkentett mintavételezésére és standardizálására.
-	\item  \emph{num\_task}: A feladatok száma.
-	\item  \emph{n}: Hány hangminta tartozik egy beszélőhöz a segédhalmazban.
-	\item  \emph{k}: Ennyi beszélő, azaz osztály van a segédhalmazban.
-	\item  \emph{network\_type}: Sziámi vagy klasszifikációs.
-	\item  \emph{distance\_metric}: Sziámi hálózat esetén a hangvektorok közötti távolságmetrika.
-\end{itemize}
-
-\subsubsection{Beszédadatbázisok és generátorok}
-
-A voicemap tanításhoz és teszteléshez a \emph{LibriSpeech} adatbázis \emph{dev-clean}, \emph{train-clean-100} és \emph{train-clean-360} adathalmazokat használja, amelyek sorban $40$, $251$ és $921$ különböző beszélőtől tartalmaznak nyers hangfájlokat. Egy adathalmazt egy adatgenerátor osztály reprezentál ami a keras.util.Sequence osztályból származik. Az adatgenerátorok nagy adathalmazok esetén hasznosak, amikor az egész adathalmaz nem fér bele a memóriába. Ilyen esetekben egyesével generálnak adatokat.
-
-A \emph{keras.util.Sequence} osztályból való leszármaztatás miatt az adatgenerátorban implementálni kell a \emph{\_\_len\_\_} és \emph{\_\_get\_item\_\_} függvényeket. Előbbi az adathalmaz méretét adja vissza, utóbbi annak indexelését teszi lehetővé. Továbbá biztosítja, hogy egy epochon belül egy mintával csak egyszer tanítjuk a modellt.
-
-A \emph{LibriSpeechDataset} osztály ezen kívül képes még egy beszélőtől és különböző beszélőktől származó hangminta párok előállítására, tanításhoz hangminta pár kötegek építésére, amelyekben az azonos és különböző beszélőktől származó párok esélye 50\%. Az objektum létrehozásakor választhatunk sima és sztochasztikus mód között. Míg az előbbi a minta elejétől számolva, utóbbi véletlenszerűen választja ki a megadott hosszúságú szakaszt egy mintán belül. A módtól eltekintve ha egy hangmintát kiegészíthetünk 0-ákból álló \emph{paddinggel} is a megfelelő méretre. Fontos függvénye még a \emph{build\_n\_shot\_task}, ami validációhoz és kiértékeléshez \emph{k-way n-shot} feladatokat hoz létre. A függvény visszaad egy hangmintát az azonosítandó beszélőtől és egy generált segédhalmazt, ami tartalmaz mintát az azonosítandó és egyéb beszélőktől is az $n$ és $k$ paraméterek alapján.
-
-\subsubsection{Tanítás}
-
-A sziámi és a sima klasszifikációs hálózat nagyrészt közös paraméterekkel rendelkeznek. A fő különbség, hogy míg a sziámi veszteségfüggvénye bináris keresztentrópia, és a veszteség az alapján dől el, hogy a hangminta pár egyazon vagy más beszélőktől származik, a klasszifikációs hálózat kategórikus keresztentrópiát használ, tehát a hangmintát megpróbálja besorolni $k$ osztály valamelyikébe $k$ beszélő esetén. A közös paraméterek:
-
-\begin{itemize}
-	\item hangminta hossza: 3 sec
-    \item batchsize: 64
-    \item filterek száma: 128
-    \item jellemző vektor dimenzió: 64
-    \item dropout: 0
-    \item steps\_per\_epoch: 500
-    \item kiértékelési feladatok száma: 500
-    \item n\_shot\_klasszifikáció: 1
-    \item k\_way\_klasszifikáció: 5
-\end{itemize}
-
-Tehát mindkét modell optimizált hiperparamétereket használ, \emph{Adam} optimizálót és veszteségfüggvényként keresztentrópiát. Egy epoch $500$ batch iterációból áll és egy batch méret $64$.
-Az epochok végén három callback fut le.
-Minden epoch végén kiértékelés történik: 500 \emph{1-shot 5-way} feladat átlagos eredménye jelzi a pontosságot. Amennyiben ez növekszik a modellről \emph{checkpoint} készül (\emph{ModelCheckpoint}).
-Továbbá ha a kiértékelés során a pontosság nem nő, a \emph{ReduceLROnPlateau} csökkenti a tanulási rátát.
-
-
-\subsubsection{Kísérletek és optimalizálás}
-
-A repositoryban számos kísérlet található a legjobb teljesítmény elérésére. A \emph{wide\_vs\_tall} szkript leméri, hogy a modell hogyan teljesít különböző hosszúságú hangmintákkal tanítva. A mérés alatt \emph{1-shot 5-way} feladatokkal, azaz 5 különböző beszélőtől 1-1 beszédmintával validálta a modellt.
-
-\begin{figure}[!ht]
-	\centering
-	\includegraphics[width=150mm, keepaspectratio]{figures/voicemap-wide-vs-tall.png}
-	\caption{Voicemap: Regisztrációs fázis.}
-	\label{fig:voicemap-wide-vs-tall}
-\end{figure}
-
-A \ref{fig:voicemap-wide-vs-tall} ábrán látható, hogy a hangminta méretét növelve a modell valóban jobban tanul, de a több adat miatt megnövekedik a tanítási idő és több memóriára van szükség. A grafikon mutatja, hogy 3 másodperc után a validáció stagnálni kezd, ezért az erőforrásokat és a tanítási időt figyelembe véve ez tűnik a legjobb választásnak.
-
-A \emph{grid\_search\_siamese\_network} szkript hiperparaméter optimizációt végez a sziámi hálózaton a filterek számát, a hangmintákból képzett vektorok hosszát és a dropoutot vizsgálva. A talált legjobb paraméterek:
-
-\begin{itemize}
-	\item filterek száma: 128
-	\item jellemző vektor dimenzió: 64
-	\item dropout: nincs
-\end{itemize}
-
-A \emph{k\_way\_accuracy} kísérlet a hiperparaméter optimalizált modellt teljesítményét méri le különböző \emph{n-shot k-way} feladatokkal. A pontosságot a következő ábra mutatja:
-
-\begin{figure}[!ht]
-	\centering
-	\includegraphics[width=150mm, keepaspectratio]{figures/voicemap-n-shot-k-way.png}
-	\caption{Voicemap: n-shot k-way pontosság.}
-	\label{fig:voicemap-n-shot-k-way}
-\end{figure}
-
-\emph{1-shot k-way} feladatok esetén a sziámi hálózat átlagosan jobban teljesít sima klasszifikációsnál, de \emph{5-shot k-way} feladatok esetén már az utóbbi kerül fölénybe. Ez valószínűleg annak köszönhető, hogy 5 hangminta - beszélő párból a sima osztályozó hálózat már jobban meg tudta tanulni a beszélőket a sziáminál.
-
-\subsubsection{Saját kísérletek}
-
 \section{Implementáció}
 
 \subsection{Kliens alkalmazás}
@@ -467,7 +357,7 @@ Az alkalmazás a következő REST végpontokat biztosítja a kliens számára:
 
 Ebben a fejezetben bemutatom a fejlesztéshez használt technológiai stacket. Szó lesz a szerver oldali és a kliens alkalmazáshoz használt toolokról, környezetekről.
 
-\subsection{Git}
+\subsubsection{Git}
 
 A Git egy nyílt forráskódú verziókezelő, ami a fejlesztésben rendkívül fontos. A verziókezelés nem csak akkor hasznos, ha többen dolgoznak egy projekten. Egyéni kódbázist
 refaktorálás után ezáltal visszaállíthatunk, törölt fájlokat, kódrészleteket követhetünk vissza. A saját repositorymat GitHubon tároltam.
@@ -523,11 +413,11 @@ A projekt beállításokban új Deployment létrehozásakor megadható a virtuá
 Szintén hasznos funckió a remote debugger, aminek segítségével a távoli virtuális gépen futó alkalmazást tudjuk debuggolni lokálisan.
 
 
-\subsection{Android Studio}
+\subsubsection{Android Studio}
 
 A kliens oldali Android alkalmazás fejlesztéséhez Android Studiot használtam, ami az Android hivatalos fejlesztőkörnyezete. Az beépített templatek új \emph{Activity}k és a Layout Editor nagyban megkönnyíti a felhasználói felület fejlesztését. Támogatja emulátorok használatát, amelyeken debugolni is lehet.
 
-\subsection{Genymotion}
+\subsubsection{Genymotion}
 
 Mivel az Android Studio emulátorai nem támogatják teljes mértékben az AMD processzorokat, külső emulátort használtam, a \emph{Genymotion}t. Ez egy külön alkalmazás és pluginnal csatlakoztatható az Android Studiohoz.
 

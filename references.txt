@@ -1,0 +1,3 @@
+http://www.hiradastechnika.hu/data/upload/file/2006/2006_3/HT_0603-5.pdf 2.1.2 CMU Arctic - diád
+https://www.danielpovey.com/files/2015_icassp_librispeech.pdf - librispeech
+https://en.wikipedia.org/wiki/FMLLR - librispeech

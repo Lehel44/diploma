@@ -138,7 +138,7 @@ A \emph{grid\_search\_siamese\_network} szkript hiperparaméter optimizációt v
 	\item dropout: nincs
 \end{itemize}
 
-A \emph{k\_way\_accuracy} kísérlet a hiperparaméter optimalizált modellt teljesítményét méri le különböző \emph{n-shot k-way} feladatokkal. A pontosságot a következő ábra mutatja:
+A \emph{k\_way\_accuracy} kísérlet a hiperparaméter optimalizált modell teljesítményét méri le különböző \emph{n-shot k-way} feladatokkal. A pontosságot a \ref{fig:voicemap-n-shot-k-way} ábra mutatja.
 
 \begin{figure}[!ht]
 	\centering
@@ -149,13 +149,30 @@ A \emph{k\_way\_accuracy} kísérlet a hiperparaméter optimalizált modellt tel
 
 \emph{1-shot k-way} feladatok esetén a sziámi hálózat átlagosan jobban teljesít sima klasszifikációsnál, de \emph{5-shot k-way} feladatok esetén már az utóbbi kerül fölénybe. Ez valószínűleg annak köszönhető, hogy 5 hangminta - beszélő párból a sima osztályozó hálózat már jobban meg tudta tanulni a beszélőket a sziáminál.
 
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=150mm, keepaspectratio]{figures/voicemap-n-shot-k-way.png}
+	\caption{Voicemap: n-shot k-way pontosság.}
+	\label{fig:voicemap-n-shot-k-way}
+\end{figure}
+
 \newpage
 
-\subsection{Saját kísérletek}
+Lemértem sziámi hálózat esetén a contrastive loss és bináris keresztentrópia veszteségfüggvények közötti különbséget. Mindkét modellt az optimizált hiperparaméterekkel 50 epochon keresztül tanítottam.
 
-\subsubsection{Contrastive loss}
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=150mm, keepaspectratio]{figures/contrastive_vs_bce.png}
+	\caption{Voicemap: n-shot k-way pontosság.}
+	\label{fig:contrastive_vs_bce}
+\end{figure}
 
-\subsubsection{Triplet loss}
+A \ref{fig:contrastive_vs_bce} grafikon mutatja, hogy a \emph{1-shot 5-way} pontosság a 20. epochnál kezd 90\% fele konvergálni. A maximális pontosság contrastive lossnál a 44. epochnál 90,8\%, míg bináris keresztentrópia esetén a 47. epochnál 92,6\%.
+
+\newpage
+
+\subsection{Saját kísérlet: Triplet loss}
 
 Létrehoztam egy bemenetként tripleteket fogadó neurális hálózatot \emph{triplet loss} veszteségfüggvénnyel. Egy bemenet egy olyan hangminta hármas (triplet), ami két azonos és egy különbözőtől beszélőtől tartalmaz hangmintát. 
 \newline
@@ -163,7 +180,7 @@ Létrehoztam egy bemenetként tripleteket fogadó neurális hálózatot \emph{tr
 A két azonos minta közül az egyik lesz az \emph{anchor} érték. Ehhez mérten számoljuk ki a pozitív (azonos beszélőtől származó) és negatív (különböző beszélőtől származó) távolságokat. 
 \newline
 \newline
-Az alapja a konvolúciós enkóder. Ehhez csatlakozik három bemenet, a kimenetére pedig két lambda réteg ami a pozitív és negatív távolságokat számolja ki, majd még két lambda réteg kiszámolja a vektorok hosszát. A szubtrakciós réteg a ezután a két kiszámolt vektort kivonja egymásból, ahogy a \ref{fig:triplet-network} ábrán látható.
+Az alapja a konvolúciós enkóder. Ehhez csatlakozik három bemenet, a kimenetére pedig két lambda réteg ami a pozitív és negatív távolságokat számolja ki, majd még két lambda réteg kiszámolja a vektorok hosszát. A szubtrakciós réteg ezután a két kiszámolt vektort kivonja egymásból, ahogy a \ref{fig:triplet-network} ábrán látható.
 
 \begin{figure}[!ht]
 	\centering
@@ -171,3 +188,20 @@ Az alapja a konvolúciós enkóder. Ehhez csatlakozik három bemenet, a kimenet�
 	\caption{Triplet hálózat.}
 	\label{fig:triplet-network}
 \end{figure}
+
+Tanításhoz a LibriSpeech adatbázist használatam. Ehhez módosítottam a \emph{LibriSpeechDataset} osztályt úgy, hogy képes legyen tripletekből álló batchek generálására is.
+\newline
+\newline
+Az \emph{utils.py}-ben implementáltam magát a \emph{triplet loss} veszteségfüggvényt, módosítottam a BatchPreProcessor wrapper osztályt, hogy egységesen kezelje a triplet alakú tanítóadatokat a sziámi és sima konvolúciós bemenetekkel együtt, majd kiegészítettem az \emph{n\_shot\_task\_evaluation} függvényt úgy, hogy képes legyen \emph{k-way n-shot} feladat kiértékelést tripleteken is elvégezni.
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=150mm, keepaspectratio]{figures/triplet-loss-chart.png}
+	\caption{Triplet lossal tanítás eredményei.}
+	\label{fig:triplet-loss-chart}
+\end{figure}
+
+A tanítás során minden batch végén 1-shot 5-way kiértékelés történik, azaz 5 beszélőtől egyelemű segédhalmazokkal próbálja a hálózat megtippelni, hogy melyik beszélőhöz tartozik a kérdéses hangminta.
+\newline
+\newline
+A grafikonon azt mutatja, hogy az egyes epochok szerint hogyan változik a veszteség és a 1-shot 5-way pontosság. Látható, hogy a veszteség stagnálva, de csökken, ennek ellenére a validációs pontosság folyamatosan 0 és 1 között változik. A 17. és 24 epochnál megközelíti az 1-et, majd tovább romlik, a tanítás nem volt sikeres.

@@ -55,7 +55,115 @@ A hangfájlokhoz tartozó egyéb fájlok beszédfelismerés szempontjából font
 
 \subsection{CMU Arctic}
 
-A CMU Arctic beszédadatbázist beszédszintézis kutatásokhoz tervezték. 18 adathalmazt tartalmaz 18 különböző embertől más-más akcentussal, angol nyelven. Egy emberhez több száz beszédminta tartozik wav fájlok formájában.
+A CMU Arctic adathalmaz beszédszintézishez kapcsolódó kutatásokhoz tervezték. A beszédszintézis az emberi beszéd mesterséges, általában számítógéppel történő előállítása. Mivel akkoriban a publikusan elérhető beszédadatbázisok kis méretűek voltak, létrehozták a CMU Arcticot, ami több beszédadatbázis összessége. Egy adatbázis egy beszélőhöz tartozik és tartalmaz egyéb információkat is, mint a fonetikus kiejtés vagy a beszédjel egyes jellemzőit (pitchmark) tartalmazó fájlok.
+\newline
+\newline
+Mivel a CMU Arctic felhasználási célja a beszédszintézis, a felvételek studió minőségűek, mentesek külső zajoktól és a beszélő által keltett zajoktól is.
+\newline
+\newline
+Az egyes Arctic adatbázisok közel 1150 kb. 1-4 másodperces beszédmintából állnak. Az egy beszélőhöz tartozó mintákat két azonos elemszámú A és B csoportra osztották, amelyek fonetikailag kiegyensúlyozottak. Ez azt jelenti, hogy az adott beszédmintában található fonémák körülbelül ugyanakkora gyakorisággal fordulnak elő mint az átlagos társalgás közben az adott nyelven.
+A beszédminták WAV fájlok formájában 32 kHz-en lettek mintavételezve. A felvételek öt beszélőtől tartalmaznak hangmintákat:
+\newline
+\begin{itemize}
+	\item férfi általános amerikai angol akcentus
+	\item női általános amerikai angol akcentus
+	\item férfi kanadai angol akcentus
+	\item férfi skót angol akcentus
+	\item férfi indiai angol akcentus
+\end{itemize}
+\bigskip
+A CMU Arctic tartalmaz egy listát az egyes beszélők által felolvasott szövegekkel.
+Mivel ez egy mindenki által elérhető ingyenes beszédadatbázisnak készült és szabad szoftver licensszel rendelkezik, fontos szempont volt, hogy a felolvasott szövegek ne sértsenek szerzői jogokat. Emiatt a listán szereplő mondantok a legnagyobb ingyenes, szabadon felhasználható szövegkorpuszból, a Gutenberg Projectből származnak. A Guteberg Project célja szerzői jogokat nem sértő angol nyelvű könyvek gyűjtése és elérhetővé tétele.
+\newline
+\newline
+A CMU Arctic eleinte 2,5 millió szóból és az azokat tartalmazó 168000 mondatból állt. Ezekből a FestVox beszédszintézis projekt segítségével kiválogattak 52000 olyan mondatot, amelyek kiejtése könnyű és hossza 5 és 15 szó közé esett. A Festvox ugyan tartalmaz kiejtési További szigorításként csak olyan szavak kerülhettek be, amelyek részei a CMUDICT lexikonnak, hogy elkerüljék az eltérő kiejtést.
+\newline
+\newline
+Ezután a Festvox segítségével az 52000 mondatból kiválogatták a legnagyobb diád lefedettségű halmazt. A diád két egymás utáni félhang együtteseként előálló nyelvi egység, amely lefedettségének mértéke a beszédszintézis során előállított beszéd minősége miatt fontos. 
+
+A kiválogatott részt kivéve egy újabb halmazt választottak ki, amelyek 668 és 629 mondatból álltak. Ezeket manuálisan átnézve tovább finomították.
+
+\begin{table}[!ht]
+	\begin{tabular}{*4l} \toprule
+		\bfseries Arctic & \bfseries Automatikus fázis & \bfseries Kézi finomítás I. & \bfseries Kézi finomítás II. \\ \midrule
+		A halmaz                             & 668      & 597   & 593          \\
+		\rowcolor{gray!10} 
+		B halmaz                             & 629      & 541   & 539        \\
+		Összesen                             & 1297      & 1138   & 1132        \\
+		\bottomrule
+		\hline
+	\end{tabular}
+	\centering
+	\caption{Arctic CMU automatikus és kézi fázisok.}
+	\label{fig:arctic-phases}
+\end{table}
+
+A CMU Arctic diád lefedettsége 80\% és az előbbihez hasonlóan triád lefedettsége 14\%. Az előbbi megelőzi mint a TIMIT beszédkorpuszban lévő diád lefedettséget, utóbbiban viszont a TIMIT jobb a több (2343) mondat miatt.
+
+\begin{table}[!ht]
+	\begin{tabular}{*8l} \toprule
+		\bfseries Corpus & \bfseries Mondat & \bfseries Szó & \bfseries Fonéma  & \bfseries \begin{tabular}{@{}l@{}} Fonéma \\ lefedettség \end{tabular}  & \bfseries \begin{tabular}{@{}l@{}} Diád \\ lefedettség \end{tabular}  & \bfseries \begin{tabular}{@{}l@{}} Triád \\ lefedettség \end{tabular} \\ \midrule
+		TIMIT-all & 2342 & 20771 & 87819 & 100\% & 78,2\% & 19,4\% \\
+		\rowcolor{gray!10} 
+		Arctic & 1132 & 10045 & 39153 & 100\% & 79,6\% & 13,7\% \\
+		\bottomrule
+		\hline
+	\end{tabular}
+	\centering
+	\caption{Arctic CMU vs. TIMIT.}
+	\label{fig:arctic-vs-timit}
+\end{table}
+
+\subsection{LibriSpeech}
+
+2015-ben már vizsgálták a hangoskönyvek beszédszintézishez való használatát és léteztek ilyen célú beszédadatbázisok, de nem volt automatikus beszédfelismerés céljára létrehozott, ingyenes, mindenki által elérhető beszédkorpusz. A LibriSpeech beszédfelismerő rendszerek tanítására és kiértékelésére készült. Tartalma a LibriVox projektből származik, amelynek célja szabadon terjeszthető hangfelvételek készítése ingyenes, közkinccsé vált könyvekről, és ezek közzététele bárki számára az interneten.
+\newline
+\newline
+A projekt körülbelül 1000 órányi beszédet tartalmaz 16 kHz-en mintavételezve. Tartalmaz ezek mellett több előre tanított beszédfelismerő modellt és Kaldi szkripteket beszédfelismerő rendszerek készítéséhez.
+\newline
+\newline
+Az előfeldolgozási fázisban a könyvek szövegét normalizálták; kis és nagybetűk helyett csak nagybetűket használtak, eltüntették az írásjeleket és a gyakori rövidítések helyett a teljes szavakkal helyettesítették. Ezután a hangmintákat felismertették a Kaldi \emph{gmm-decode-faster} dekóderével, amihez egy VoxCeleb adatbázison tanított modellt használtak.
+\newline
+\newline
+Összemérték az előbbi modell által felismert szöveget az eredeti írással és azokat a részeket választották ki, ahol a kettő megegyezett. A hanganyagot legfeljebb 35 másodperces részekre tördelték minimum 0.5 másodperces szünetek mentén.
+\newline
+\newline
+A következő fázisban egy fMMRl (HMM-alapú) modellel ismét összemérték a felismert szöveget a valódival. Ez okozott hamis pozitív eredményeket is, de az audioanyag mennyisége miatt elhanyagolható volt. Ez a fázis tehát 35 másodperces nagy valószínűséggel helyesen transzkriptált anyagokat tartalmazott.
+\newline
+\newline
+A harmadik fázis ezeknek az apróbb szegmensekre tördelése volt, amit két módszerrel végeztek el. Tanítóadatok esetén minden olyan szünetnél tördeltek, ahol az legalább 0,3 másodperc hosszú volt. Tesztadatok esetén csak ott tördeltek, ahol ez a szünet egybeesett a mondat végével is.
+
+\begin{table}[!ht]
+	\begin{tabular}{*6l} \toprule
+		\bfseries Részhalmaz & \bfseries Óra & \bfseries beszélő / perc & \bfseries \begin{tabular}{@{}l@{}} Férfi \\ beszélő \end{tabular}
+		& \bfseries \begin{tabular}{@{}l@{}} Női \\ beszélő \end{tabular} & \bfseries \begin{tabular}{@{}l@{}} Összes \\ beszélő \end{tabular} \\ \midrule
+		dev-clean & 5,4 & 8 & 20 & 20 & 40 \\
+		\rowcolor{gray!10} 
+		test-clean & 5,4 & 8 & 20 & 20 & 40 \\
+		dev-other & 5,3 & 10 & 16 & 17 & 33 \\
+		\rowcolor{gray!10} 
+		test-other & 5,1 & 10 & 17 & 16 & 33 \\
+		train-clean-100 & 100,6 & 25 & 125 & 126 & 251 \\
+		\rowcolor{gray!10}
+		train-clean-360 & 363,6 & 25 & 439 & 482 & 921 \\
+		train-other-500 & 496,7 & 30 & 564 & 602 & 1166 \\
+		\bottomrule
+		\hline
+	\end{tabular}
+	\centering
+	\caption{LibriSpeech részhalmazok.}
+	\label{fig:librispeech-subset}
+\end{table}
+\bigskip
+Az audiófelvételek válogatásához a LibriVox API segítségével szereztek információkat a felolvasóról,
+hogy mely hangoskönyvekben olvastak fel milyen fejezeteket, a kapcsolódó referencia szövegeket pedig a Gutenberg Project és Internet Archiveból nyerték ki. A train, dev és test részhalmazok között fontos, hogy ne legyen átfedés, tehát ugyanaz az olvasó ne olvasson csak egyetlen halmazban ezek közül. Ehhez a válogatáson kívül további óvintézkedésként kivették a többszereplős fejezeteket és lefuttaták a LIUM beszélő szegmentáló toolkitet ennek detektálására.
+\newline
+\newline
+A tanítóhalmazba válogatott részeket három részre osztották. Ezek egyenként 100, 360 és 500 órányi audiofelvételt tartalmaznak. Az első kettőbe automatikus módszerrel az amerikai angol akcentushoz hasonló részeket válogatták bele. Egy egyszerű a Wall Street Journal si-84 adatbázisán tanított akusztikus modellt használtak a LibriSpeechen beszédfelismerésre. Ezáltal meghatározták és rangsorolták a beszélőket a Word Error Rate (a modell által hibásan felismert szavak) szerint. Az alacsonyabb WER pontszámmal rendelkező olvasók a clean, a magasabbal az other részhalmazokba kerültek.
+
+\subsection{VoxCeleb}
+
+
 
 \subsection{Adatok előfeldolgozása}
 

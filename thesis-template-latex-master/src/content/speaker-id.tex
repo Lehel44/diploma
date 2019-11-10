@@ -161,9 +161,76 @@ hogy mely hangoskönyvekben olvastak fel milyen fejezeteket, a kapcsolódó refe
 \newline
 A tanítóhalmazba válogatott részeket három részre osztották. Ezek egyenként 100, 360 és 500 órányi audiofelvételt tartalmaznak. Az első kettőbe automatikus módszerrel az amerikai angol akcentushoz hasonló részeket válogatták bele. Egy egyszerű a Wall Street Journal si-84 adatbázisán tanított akusztikus modellt használtak a LibriSpeechen beszédfelismerésre. Ezáltal meghatározták és rangsorolták a beszélőket a Word Error Rate (a modell által hibásan felismert szavak) szerint. Az alacsonyabb WER pontszámmal rendelkező olvasók a clean, a magasabbal az other részhalmazokba kerültek.
 
-\subsection{VoxCeleb}
+\subsection{VoxCeleb1}
 
+A beszélőfelismerésre használt adatbázisok kontrollált körülmények között felvett audio anyagot tartalmaznak és kézzel válogatottak, emiatt kis méretűek. Kontrollált körülmény alatt értjük a studioban felvett, külső és belső zajoktól mentes hanganyagot. Ezek a valós körülmények közötti, azaz zajos környezetben elhangzó beszédfelismerést megnehezítik. A VoxCeleb készítői a beszélőfelismerő adabázisok automatikus létrehozására terveztek egy folyamatot és létrehozták, valamint ingyenesen elérhetővé tették a VoxCeleb beszédadatbázist, ami valós körülmények közötti hanganyagot tartalmaz.
+\newline
+\newline
 
+\begin{table}[!ht]
+	\begin{tabular}{*4l} \toprule
+		\bfseries Név & \bfseries Körülmények & \bfseries Beszélők száma & \bfseries Minták száma \\ \midrule
+		ELSDSR                             & Kontrollált & 22     & 198          \\
+		\rowcolor{gray!10} 
+		Forensic Comparison                & Telefonos   & 552   & 1264        \\
+		SITW                           & Multimédia        & 299   & 2800        \\
+		\rowcolor{gray!10} 
+		VoxCeleb                           & Multimédia        & 1251   & 153516        \\
+		\bottomrule
+		\hline
+	\end{tabular}
+	\centering
+	\caption{Beszédadatbázisok beszédfelismerés.}
+	\label{fig:speaker-recognition-datasets}
+\end{table}
+
+\bigskip
+A VoxCeleb több mint 100000 olyan beszédmintát tartalmaz 1251 hírességtől, amik YouTube videókból származnak. Az adatbázisban a nemek aránya kiegyensúlyozott (férfiak 55\%, nők 45\%), a beszélők különböző származásúak, korúak illetve eltérő akcentussal rendelkeznek. A beszéd általában publikus eseményekről származik, így a háttérzaj, egyéb beszélők és a felvevő eszköz minősége zajossá teszi azt.
+\newline
+\newline
+Az adatbázis előállítása a következő módon történt:
+\begin{itemize}
+	\item A beszélő jelöltek kiválasztása:  Olyan hírességeket válogattak akik benne vannak a VGG adathalmazban, ami 2622 híres (interneten sokat keresett) ember arcát tartalmazza.
+	\item YouTube videók letöltése: Letöltötték a kiválasztott emberekhez tartozó első 50 YouTube videót. A keresés az illető nevét és utána az \emph{interview} szót tartalmazta, hogy kiszűrjék a zeneszámokat, sportfelvételeket és minél nagyobb valószínűséggel beszéljenek benne.
+	\item Arcdetektálás: Az egyes videókon egy HOG-alapú arc detektorral meghatározták az arcok helyét minden egyes frameben.
+	\item Aktív beszélőazonosítás: Mivel egy videóban több arc is megjelenhet egyszerre vagy a beszélőt szinkronizálhatják, az éppen beszélő arc meghatározására illetve az utóbbit kiszűrésére szükség volt. A megoldás a SyncNet volt, egy olyan kétcsatornás CNN, ami képes megbecsülni a szájmozgás és a beszéd közötti korrelációt.
+	\item Arcfelismerés: Végül egy a VGG Face adathalmazzal tanított CNN segítségével ellenőrizték, hogy a beszélő arc valóban a kérdéses személy-e.
+\end{itemize}
+
+\subsection{VoxCeleb2}
+
+A VoxCeleb2 ugyanúgy beszélőfelismeréshez készített, de az előző verzióhoz képest jóval nagyobb, 6112 hírességtől tartalmaz 2442 órányi beszédet tartalmazó beszédadatbázis különböző nyelvű, korú és származású beszélőkkel.
+\newline
+\newline
+Az adatbázis előállítási folyamatot az előzőhöz képest tovább bővítették.
+\begin{itemize}
+	\item Duplikátum detektálás: YouTube-on gyakran feltöltik ugyanazt a videót más url alatt különböző felhasználók. Egy a VoxCeleb1 adatbázison tanított konvolúciós hálózatot használtak jellemző kinyerésre, amellyel 1024 dimenziós vektorokkal reprezentálták a beszédmintákat. Egy beszélőre kiszámolták a vektorpárok közötti Euklideszi-távolságot és ahol ez kisebb volt mint 0,1 azokat azonosnak tekintették.
+	\item Nemzetiség: A beszélők nemzetiségét a Wikipediáról gyűjtötték ki egy keresőrobottal (angolul webcrawler). Ezzel a módszerrel a 6112 beszélő közül 5689 nemzetiségét sikeresen azonosították. Ebből kiderült, hogy a VoxCeleb2 etnikailag sokkal diverzifikáltabb a VoxCeleb1-hez képest, mivel a VoxCeleb1 adatbázisban jelenlévő 36 nemzetiségnél jóval többet, 145-öt tartalmaz. Ugyanakkor az amerikai angolt beszélők aránya is sokkal kisebb, 29\% a VoxCeleb1-ben mért 64\%-hoz képest.
+\end{itemize}
+
+\begin{table}[!ht]
+	\begin{tabular}{*3l} \toprule
+		\bfseries Adatok & \bfseries VoxCeleb1 & \bfseries VoxCeleb2 \\ \midrule
+		Beszélők száma   & 1251 & 6112 \\
+		\rowcolor{gray!10} 
+		Beszélők száma   & 1251 & 6112 \\
+		Női beszélők száma & 561 & 2351 \\
+		\rowcolor{gray!10}
+		Férfi beszélők száma & 690 & 3761 \\
+		Videók száma & 22496 & 150480 \\
+		\rowcolor{gray!10}
+		Beszédminták száma & 153516 & 1128246 \\
+		Átlagos videó / beszélő & 18 & 25 \\
+		\rowcolor{gray!10}
+		Átlagos beszédminta / beszélő & 116 & 185 \\
+		Átlagos beszédminta hossz & 8,2 & 7,8 \\
+		\bottomrule
+		\hline
+	\end{tabular}
+	\centering
+	\caption{VoxCeleb1 vs. VoxCeleb2.}
+	\label{fig:voxceleb1-vs-2}
+\end{table}
 
 \subsection{Adatok előfeldolgozása}
 

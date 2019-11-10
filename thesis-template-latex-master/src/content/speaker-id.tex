@@ -1,6 +1,7 @@
-\chapter{Beszélőazonosító rendszerek napjainkban}
+\chapter{Beszédadatbázisok}
 
-A fejezet bemutatja a tanítás során használt beszédadatbázisokat, két neurális hálózat alapú, zárt-halmazú, automatikus beszélőfelismerő rendszert; a \emph{WaveNet classifiert} és a \emph{SincNetet} illetve az ezekkel elért eredményeket.
+A fejezet bemutatja a jelenleg ingyenes, bárki által elérhető és a tanítás során használt beszédadatbázisokat. Egy beszédadatbázis előállítása bár ránézésre egyszerű feladatnak tűnik,
+valójában komplex folyamat és sok munkát igényel. Egyes adatbázisokat beszédfelismerés céljából készítettek, másokat beszélőfelismerésre. Az előbbinél kontrollált körülmények előállítása, megfelelés egyes nyelvtani mérőszámoknak (fonémák, diádok egyenletes elosztása stb.), utóbbinál a nagyobb méret miatt az automatizmus szükségessége bonyolítja a feladatot, valamint mindkét esetben a szerzői jogok védelmére is ügyelni kell. (A dolgozatban a beszédadatbázis, beszédkorpusz és beszédadathalmaz ugyanarra vonatkozik.)
 
 \section{Beszédadatbázisok}
 
@@ -232,13 +233,21 @@ Az adatbázis előállítási folyamatot az előzőhöz képest tovább bővíte
 	\label{fig:voxceleb1-vs-2}
 \end{table}
 
+\chapter{Neurális hálózat alapú beszélőfelismerő rendszerek}
+
+Ebben a fejezetben bemutatom két ingyenes, neurális hálózaton alapú beszélőfelismerő rendszer működését.
+Mindkét rendszer zárt halmazú beszélőfelismerésre képes. A tanítást és tesztelést a TIMIT és CMU Arctic beszédadatbázisokkal végeztem.
+
+\section{Mérési környezet}
+
+A mérésekhez a Google Colaboratoryt használtam, amely gépi tanulási kutatások és oktatás céljából felhő alapú környezetet biztosít. Hozzáférni Google fiókkal lehet, egy felhasználó egy virtuális gépet és egy Jupyter Notebookot kap. Választhatunk, hogy  a notebook a Python 2-es vagy 3-as verzióját támogassa, illetve, hogy CPU-n, GPU-n vagy TPU-n szeretnénk tanítani. A Tensor Processing Unit (TPU) a Google által fejlesztett gyorsító hardver egység Tensorflows tanításokhoz.
+\newline
+\newline
+Az erőforrásokhoz fájlrendszert is kapunk. Ehhez hozzácsatolhatjuk a Google Drive fiókunkat, így elérhetjük a rajta tárolt adatokat. A notebookon keresztül elérjük a mögötte futó Linuxot is, lehet terminál parancsokat futtatni ha \emph{!} vagy \emph{\%} jelöléssel kezdjük a sort. Ez lehetővé teszi azt is, hogy pl. kisebb méretű dolgokat \emph{wget}tel töltsünk le vagy navigáljunk a fájlrendszerben, létrehozzunk új mappákat vagy töröljünk, áthelyezzünk fájlokat. Ugyan egyszerre több notebookot használhatunk, a fájlrendszer és a hardveres erőforrások ezek között megosztottak.
+
 \subsection{Adatok előfeldolgozása}
 
 Az előfeldolgozó szkript a TIMIT adatbázis esetében a hangmintákról eltávolítja a NIST Sphere fejlécet és a mondat előtti és utáni szüneteket. Ezután normalizálja a hangmintákat. A CMU Arctic esetében a hangminták alapból normalizálva vannak, ezért csak azonos méretűre kell vágni őket az egységes bemeneti dimenziók érdekében (ahogy a TIMIT esetében is).
-
-\section{Mérési elrendezés}
-
-Google Colab...
 
 \section{WaveNet classifier}
 
@@ -368,6 +377,10 @@ A WaveNet classifiert mindkét beszédadatbázison teszteltem. A TIMIT beszédko
 !!! teszthalmaz mérete !!!
 
 Tanítás után a teszt adathalmazon a hálózat 96.799 \%-os pontosságot ért el.
+\newline
+\newline
+
+A CMU Arctic adatbázisokat letöltöttem a Google Colaboratory-s fájlrendszerre és egy mappa alá mozgattam őket. Ehhez csak az adatbázis kódjára volt szükség, mindegyik azonos url-en található. 
 
 \section{SincNet}
 

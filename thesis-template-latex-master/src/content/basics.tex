@@ -27,6 +27,39 @@ A biometrikus azonosítást az ún. biometrikus azonosító rendszer végzi el. 
 
 A biometrikus adat lehet fiziológiai (DNS, arc, ujjlenyomat, írisz) vagy viselkedési (hang, írás, gesztusok). Mivel ezek az adatok statisztikai jellegűek, megbízhatóságuk változó. Minél több adat van egy mintában, annál egyedibb, és minél nagyobb a releváns populáció (eltárolt minták összessége), annál valószínűbb, hogy találunk két hasonló mintát. Ennek elkerülésére manapság terjednek a multimódusú biometrikus azonosító rendszerek, amelyek több biometrikus adatot felhasználva végzik ez az ellenőrzés, azonosítás és duplikátum detektálás feladatát. 
 
+\section{Equal Error Rate}
+
+Az \emph{Equal Error Rate (EER)} vagy \emph{Crossover Rate (CER)} a biometrikus rendszerek teljesítményének mérésére használatos mérőszám. Az \emph{EER} segítségével tudjuk eldönteni ellenőrzés vagy azonosítás esetén a döntési küszöbérték szintjét, amely mellett a rendszer legjobban teljesít, azaz így optimizáljuk azt. Például beszélőfelismerés esetén két hang különbségét valamekkora távolsággal jellemezzük. Ebben az esetben a küszöbérték alatt azt a távolságot értjük amely szintje alatt a két beszélőt azonosnak, fölötte különbözőnek tekintjük.
+\newline
+\newline
+A biometrikus rendszereket három fontos mérőszámmal jellemezzük. Az FAR, az FRR és az előző kettőn alapuló EER. Az első kettőre általában angolul, a következőképpen hivatkozunk:
+\begin{itemize}
+	\item False Acceptance Rate (FAR): A tévesen elfogadás esetén a biometrikus rendszer beenged egy illetéktelen felhasználót, azaz hiba miatt mással azonosítja őt. A téves elfogadási ráta ennek a mértéke, a téves elfogadások számának aránya az összes elfogadáshoz képest.
+	$$FAR = \frac{FA}{AA},$$
+	ahol \emph{FA} a téves elfogadások száma, \emph{AA} pedig az összes elfogadás száma.
+	\item False Rejection Rate (FRR): A téves visszautasítás azt jelenti, hogy az illetékes felhasználót a rendszer hiba miatt nem tudja azonosítani. A téves visszautasítási ráta a téves visszautasítások számának aránya az összes visszautasításhoz képest.
+	$$FRR = \frac{FA}{AA},$$
+	ahol \emph{FR} a téves visszautasítások száma, \emph{AR} pedig az összes visszautasítás száma.
+\end{itemize}
+Az EER az a pont, ahol az FAR értéke megegyezik az FRR-el.
+\newline
+\newline
+A biometrikus rendszerek karakterisztikáját a \ref{fig:eer} ábra szemlélteti. Vegyük a beszélőazonosító rendszer példáját. Látható, hogy a döntési küszöb növelése (mekkora távolság esetén tekintjük azonosnak a két beszélőt) esetén az \emph{FAR} nő és az \emph{FRR} csökken. Ez normális, mert ilyenkor megengedőbbek vagyunk, nagyobb távolság esetén is azonosnak tekintjük a két beszélőt, így több olyan eset lesz amikor két beszélő különbözik, a rendszer mégis azonosnak tekinti őket és kevesebb olyan amikor két beszélő azonos és a rendszer mégis visszautasít. 
+\newline
+\newline
+Ha a küszöböt csökkentjük szigorúbb lesz a rendszer, sokkal kevesebb téves elfogadás lesz, de a szigorúság miatt megnő a téves viszautasítások száma.
+\newline
+\newline
+Az EER a két grafikon metszéspontjában található, ahol FAR és FRR értéke minimális és optimális (az optimizálás alatt érthetjük a kettő szorzatát). Az EER a vízszintes tengelyen megadja az optimális küszöbértéket, a függőlegesen pedig egy hiba rátát. Ez az FRR és FAR hiba rátája, mivel a kettő ebben a pontban megegyezik.
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=150mm, keepaspectratio]{figures/eer.png}
+	\caption{Biometrikus rendszerek karakterisztikája.}
+	\label{fig:eer}
+\end{figure}
+
+
 
 \section{Beszélőfelismerés}
 
@@ -72,7 +105,7 @@ a hangminta azon részeiből nyerték ki, amikben beszéd is volt. Erre alkalmaz
 
 Jellemzőkinyerés során próbáljuk kiszűrni a beszélő szempontjából értékes részéket, ugyanakkor nincs tökéletes jellemző, amely ne változna a környezet hatására. Ezt a változást segítik minimalizálni a normalizálási módszerek.
 
-\subsection{Beszélő modellek}
+\subsection{A beszélőfelismerő modellek története}
 
 Kezdetben a vektor kvantálás volt az elterjed modellezési módszer, amit később a \emph{Gaussian Mixture Model} (\emph{GMM}) váltott fel. A GMM egy adathalmazt több normális eloszlás keverékeként ír le és képes nem felügyelt módon klaszterezni az adatokat. Egy beszélőhöz egy valószínűségi sűrűségfüggvényt rendel, amely különböző pontokban kiértékelve (például teszt fázisban a beszélőtől kinyert jellemzők) egy valószínűséget ad a két beszélő hasonlóságára.
 
@@ -152,4 +185,176 @@ Az utóbbi két módszer előnyeit kombinálva megszületett az $i-vektorok$, am
 	\label{fig:timit-dialects}
 \end{table}
 
+\newpage
 
+\section{Modern beszélőfelismerés}
+
+A következő fejezetben bemutatom a 2017-2019-ben publikált korszerű beszélőfelismerő rendszereket és hogy milyen eredményeket értek el. Mivel ez a kutatási terület jelenleg népszerű és folyamatosan újabb eredményeket érnek el, a bemutatott rendszereket a hivatkozások száma, a dátum és a \emph{www.paperswithcode.com} oldal rangsorolása alapján választottam ki.
+
+\subsection{Deep Speaker: an End-to-End Neural Speaker Embedding System (2017)}
+
+A Deep Speaker egy neurális hálózatokon alapuló embedding rendszer. Az \emph{embedding} kifejezés alatt valamilyen leképzést értünk. Például amikor hangokból hangvektorokat készítünk. A rendszer a hangmintákat egy hipergömbre vetíti, ahol azoknak a hasonlóságát koszinusz távolsággal méri.
+\newline
+\newline
+A leképzések előnye, hogy felhasználástól függetlenek, módszertől függően használhatók beszélőazonosításra, identifikációra és diarizációra is. 
+\newline
+\newline
+Jellemző kinyerésre ResNet és GRU (LSTM változat) architektúrákkal próbálkoztak. Tanításhoz \emph{triplet loss} veszteséget használtak, és a hangvektorok között koszinusz távolságot számoltak.
+\newline
+\newline
+A Deep Speaker által elért eredményeket a korábbi legkorszerűbb \emph{i-vektoros} rendszerekhez mérték.
+Ezeknek az általános felépítése a következőképpen néz ki:
+\begin{itemize}
+	\item Statisztikák gyűjtése
+	\item i-vektorok leképzése (jellemző kinyerés)
+	\item osztályozás (PLDA)
+\end{itemize} 
+Ezek a rendszerek \emph{GMM-UBM} modellt használtak a statisztikák kinyerésére, amiket jellemzőkkel (pl. MFCC) optimalizáltak. A GMM-UBM helyett később
+DNN alapú megoldással is próbálkoztak. A GMM-UBM kimeneteként kapott
+sokdimenziós statisztikákat ezután alacsony dimeziójú i-vektorokká alakítják, amit aztán PLDA modellel osztályoznak és verifikációra használják.
+Jelenleg a mai korszerű rendszerek az első két lépést összevonják és CNN-eket használnak alacsony dimenziós jellemzőkinyerésre.
+\begin{table}[!ht]
+	\begin{tabular}{*3l} \toprule
+		\bfseries Rendszer & \bfseries EER (\%) & \bfseries ACC (\%) \\ \midrule
+		DNN i-vector baseline & 13,79 & 51,72 \\
+		\rowcolor{gray!10}
+		ResCNN, softmax & 6,13 & 81,95 \\
+		ResCNN, triplet & 2,69 & 86,21 \\
+		\rowcolor{gray!10}
+		ResCNN, softmax (pre-train) + triplet & 2,23 & 90,53 \\
+		GRU, softmax & 5,42 & 83,05 \\
+		GRU, triplet & 3,23 & 84,19 \\
+		\rowcolor{gray!10}
+		GRU, softmax (pre-train) + triplet & 2,77 & 89,50 \\
+		\bottomrule
+		\hline
+	\end{tabular}
+	\centering
+	\caption{Mandarin nyelvű szöveg-független azonosítás eredményei tanításra és tesztelésre a Train50k és Eva200 adathalmazokat használva.}
+	\label{fig:deep-speaker-independent-mandarin-results}
+\end{table}
+
+A legjobb architektúrának a \emph{ResCNN} bizonyult softmax előtanítással és triplet lossal tanítva. Ezzel a \ref{fig:deep-speaker-independent-mandarin-results} szerint Eva200 adathalmazon \emph{90,53\%}-os eredményt értek el. A Train50k, Train250k és Eva200k az UID adathalmaz részei.
+
+\begin{table}[!ht]
+	\begin{tabular}{*3l} \toprule
+		\bfseries Rendszer & \bfseries EER (\%) & \bfseries ACC (\%) \\ \midrule
+		ResCNN on Train50k & 2,23 & 90,53 \\
+		\rowcolor{gray!10} 
+		ResCNN on Train250k & 1,83 & 92,58 \\
+		GRU on Train50k & 2,77 & 89,50 \\
+		\rowcolor{gray!10} 
+		GRU on Train250k & 2,35 & 90,77 \\
+		\bottomrule
+		\hline
+	\end{tabular}
+	\centering
+	\caption{Szöveg-független azonosítás eredményei.}
+	\label{fig:deep-speaker-independent}
+\end{table}
+
+A \ref{fig:deep-speaker-independent} szerint pedig nagyobb adathalmazzal való tanítás nagyobb pontosságot és alacsonyabb EER-t eredményezett. A legjobb eredményt a RestCNN-el érték el Train250k-val tanítva.
+\newline
+\newline
+Az eredmények a korábbi i-vektoros rendszerekhez képest a Deep Speaker 50\% csökkentette az EER-t, és pontosságban 60\%-os javulást ért el.
+
+\subsection{Speaker Recognition from Raw Waveform with SincNet (2018)}
+
+A SincNet is a korábban használt i-vektoros rendszerek helyett mutat be egy új CNN hálózatot. A CNN-ek előnye, hogy a korábban használt kézzel fabrikált jellemzők (pl. MFCC) helyett a hálózat maga tanulja meg a hang alacsony szintű reprezentációját nyers hullámformákból. Mivel a cikk a CNN-t kiegészíti hangszűrőkkel és a jelfeldolgozásban használatos fogalmakat használ, először ismertetem ezeket:
+\begin{itemize}
+	\item Beszéd frekvencia: Egy periodikus hullámforma esetében a frekvencia a periódusidő reciproka, azza megmondja, hogy egységnyi idő alatt hány periódus ment végbe. Az emberi hang esetében a komplex hullámforma Fourier analízissel felbontható trigonometrikus (periodikus) függvények összegére. A Fourier transzformáció segítségével az idő-amplitúdó doménből frekvencia-amplitúdót képzünk, így a frekvencia komplex jel esetén és értelmet nyer.
+	\item Sávszélesség: Hang esetében általánosan a legalacsonyabb és legmagasabb frekvencia közötti különbség.
+	\item Cutoff frekvencia: A hangszűrők legfontosabb paramétere. Például aluláteresztő szűrő esetében a cutoff fölötti frekvenciákat a szűrő tompítja, nem engedi át.
+	\item Band pass filter: Olyan szűrő, ami csak a cutoff frekvencia környezetében lévő frekvenciákat engedi át (egy alul -és felüláteresztő szűrő kombinációja).
+\end{itemize} 
+\ \\
+\newline
+\newline
+A SincNet egy új CNN architektúra, amelyben az első réteg ún. paraméterezhető sinc függvényekkel van kiegészítve, amelyek band pass szűrőket implementálnak.
+\newline
+\newline
+A korábban használt kézzel fabrikált jellemzők, mint az MFCC vagy FBANK esetében semmi sem garantálja, hogy optimálisak minden beszélőfelismerő feladatra. A cikk szerint lehetséges, hogy ezek a jellemzők nem veszik figyelembe a hangmagasságot és a formánsokat. A feltevésük szerint hullámforma feldolgozásánál a legfontosabb a CNN első rétege. Ezért a SincNet a hullámformákat sinc függvényekkel konvolválja, amelyek paraméterei az alacsony és magas cutoff frekvencia.
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=150mm, keepaspectratio]{figures/sincnet-nn.png}
+	\caption{SincNet architektúra.}
+	\label{fig:sincnet-nn}
+\end{figure}
+\ \\
+\newline
+\newline
+A SincNetet a TIMIT (462 beszélő) és Librispeech (2484 beszélő) adatbázisokkal tanították.
+A beszédminták elejéről a szüneteket eltávolították, és LibriSpeech esetén azokat a mintákat, amelyek tartalmaztak legalább 125 ms hosszú szünetet, annak mentén feldarabolták. A TIMIT adatbázisnál egy beszélőtől 5 mintával tanítottak és 3 mintával teszteltek, míg LibriSpeechnél véletlenszerűen választottak 12-16 másodperces mintákkal tanítottak és 2-6 másodpercesekkel teszteltek.
+\newline
+\begin{table}[!ht]
+	\begin{tabular}{*3l} \toprule
+		\bfseries Rendszer & \bfseries TIMIT & \bfseries LibriSpeech \\ \midrule
+		DNN-MFCC & 0,99 & 2,02 \\
+		\rowcolor{gray!10} 
+		CNN-FBANK & 0,86 & 1,55 \\
+		CNN-Raw  & 1,65 & 1,00 \\
+		\rowcolor{gray!10} 
+		SINCNET & 0,85 & 0,96 \\
+		\bottomrule
+		\hline
+	\end{tabular}
+	\centering
+	\caption{Szöveg-független azonosítás eredményei adatbázisok szerint.}
+	\label{fig:sincnet-identification}
+\end{table}
+\ \\
+A \ref{fig:sincnet-identification}-es táblázat a CER (Classification Error Rate [\%]) hiba rátát mutatja. E szerint a SincNet jobban teljesít az MFCC, FBANK és nyers hullámformákkal tanított CNN-eknél mindkét adatbázis esetében, bár látható, hogy a sima CNN és a SincNet között minimális a különbség.
+\newline
+\begin{table}[!ht]
+	\begin{tabular}{*3l} \toprule
+		\bfseries Rendszer & \bfseries d-vector & \bfseries DNN-class \\ \midrule
+		DNN-MFCC & 0,88 & 0,72 \\
+		\rowcolor{gray!10} 
+		CNN-FBANK & 0,60 & 0,37 \\
+		CNN-Raw  & 0,58 & 0,36 \\
+		\rowcolor{gray!10} 
+		SINCNET & 0,51 & 0,32 \\
+		\bottomrule
+		\hline
+	\end{tabular}
+	\centering
+	\caption{Szöveg-független ellenőrzés (verifikáció) eredményei.}
+	\label{fig:sincnet-verification}
+\end{table}
+\ \\
+\newline
+A SincNettel nem jellemző vektorokat képeztek és a köztük lévő távolságot használták a hasonlóság mérésére, hanem osztályozással használják. Ebben az esetben zárt-halmazú beszélőazonosításról beszélünk. Ez sokkal kevésbé flexibilis, mert új beszélő esetén mindig újra kell tanítani a hálózatot, de cserébe jobb teljesítményre képes. A \ref{fig:sincent-verification} ábrán egy d-vector nevű hangvektorokat képző neurális hálózatot hasonlítottak össze a SincNettel. Beszélőellenőrzés esetén a SincNet sokkal jobb EER-t ért el.
+
+\subsection{VoxCeleb2: Deep Speaker Recognition (2018)}
+
+A VoxCeleb1 és VoxCeleb2 nagy méretű, beszélőfelismerés céljából készült adatbázisok. Az előbbi több mint 1000, utóbbi pedig több mint 6000 hangmintát tartalmaz hírességektől. Az adatbázisok felépítésének részleteit a \ref{voxceleb1} és \ref{voxceleb2} fejezetek ismertetik. Mindkét adatbázissal végeztek méréseket különböző neurális hálózatokkal, de a legjobb eredményeket illetve nyílt-halmazú beszélőfelismerést a VoxCeleb2-vel érték el.
+\newline
+\newline
+Bemutatják a VGGVox nevű CNN alapú neurális hálózatot, amelyet spektrogramokkal tanítottak és hangvektorokat hoz létre. Előnye ennek a megoldásnak, hogy nyílt-halmazú beszélőfelismerésre használható, új beszélő esetén nem szükséges újra tanítani a hálózatot. 
+\newline
+\newline
+Módosított VGG-M és ResNet architektúrákkal kísérleteztek. A modelleket contrastive loss veszteségfüggvénnyel tanították és előtanításra egy softmax réteget használtak keresztentrópiával, ami javította a modell teljesítményét. Tanító adathalmaznak a VoxCeleb2 adatbázist használták és a tesztelést a VoxCeleb1-el végezték. A méréseket EER és a \ref{eq:cdet} detektálási költség függvény szerint értékelték ki,
+
+\begin{equation} \label{eq:cdet}
+C_{det} = C_{miss} \cdot P_{miss} \cdot P_{target} + C_{fa} \cdot P_{fa} \cdot (1 - P_{target})
+\end{equation}
+
+ahol \emph{C\_miss} és \emph{C\_fa} alkalmazás specifikus paraméterek a hamis negatív és hamis pozitív hibák költsége, \emph{P\_miss} és \emph{P\_fa} pedig a hibák előfordulásának valószínűségét jelzik. \emph{P\_target} annak a valószínűsége, hogy a rendszer két olyan mintát hasonlít össze, amely egy embertől származik.
+\newline
+\begin{table}[!ht]
+	\begin{tabular}{*4l} \toprule
+		\bfseries Rendszer & \bfseries Tanítóhalmaz & \bfseries $C_{min}^{det}$ & \bfseries EER \\ \midrule
+		I-vectors + PLDA & VoxCeleb1 & 0,73 & 8,8 \\
+		VGG-M (Softmax) & VoxCeleb1 & 0,75 & 10,2 \\
+		VGG-M & VoxCeleb1 & 0,71 & 7,8 \\
+		VGG-M  & VoxCeleb2 & 0,609 & 5,94 \\
+		ResNet-34 & VoxCeleb2 & 0,549 & 4,83 \\
+		ResNet-50 & VoxCeleb2 & 0,429 & 3,95 \\
+		\bottomrule
+		\hline
+	\end{tabular}
+	\centering
+	\caption{Beszélő ellenőrzés (verifikáció) eredményei.}
+	\label{fig:sincnet-verification}
+\end{table}

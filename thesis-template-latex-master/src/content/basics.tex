@@ -190,6 +190,13 @@ Az utóbbi két módszer előnyeit kombinálva megszületett az $i-vektorok$, am
 \section{Modern beszélőfelismerés}
 
 A következő fejezetben bemutatom a 2017-2019-ben publikált korszerű beszélőfelismerő rendszereket és hogy milyen eredményeket értek el. Mivel ez a kutatási terület jelenleg népszerű és folyamatosan újabb eredményeket érnek el, a bemutatott rendszereket a hivatkozások száma, a dátum és a \emph{www.paperswithcode.com} oldal rangsorolása alapján választottam ki.
+\newline
+\newline
+Az eredmények általános összehasonlítása több ok miatt is nehéz feladat. A cikkekben a legjobb eredmények feltüntetése miatt relatív eredményeket tartalmaznak egy-egy korábban
+publikált rendszerhez képest. Ezen kívül változik, hogy zárt vagy nyílt-halmazú beszélőfelismerés, beszélő-ellenőrzésről van-e szó, maga a teszthalmaz nehézsége: etnikai, nemi, foglalkozásbeli diverzitás, a hangminták hossza, a hangfelvétel minősége, van-e irreleváns zaj, stb. Továbbá
+a legtöbb cikk nem biztosít letölthető modellt, konfigurációt, szkripteket az előfeldolgozáshoz, így
+azonos környezethez reprodukálni kellene azokat.
+
 
 \subsection{Deep Speaker: an End-to-End Neural Speaker Embedding System (2017)}
 
@@ -277,7 +284,7 @@ A korábban használt kézzel fabrikált jellemzők, mint az MFCC vagy FBANK ese
 
 \begin{figure}[!ht]
 	\centering
-	\includegraphics[width=150mm, keepaspectratio]{figures/sincnet-nn.png}
+	\includegraphics[width=120mm, keepaspectratio]{figures/sincnet-nn.png}
 	\caption{SincNet architektúra.}
 	\label{fig:sincnet-nn}
 \end{figure}
@@ -325,7 +332,7 @@ A \ref{fig:sincnet-identification}-es táblázat a CER (Classification Error Rat
 \ \\
 \newline
 A SincNettel nem jellemző vektorokat képeztek és a köztük lévő távolságot használták a hasonlóság mérésére, hanem osztályozással használják. Ebben az esetben zárt-halmazú beszélőazonosításról beszélünk. Ez sokkal kevésbé flexibilis, mert új beszélő esetén mindig újra kell tanítani a hálózatot, de cserébe jobb teljesítményre képes. A \ref{fig:sincent-verification} ábrán egy d-vector nevű hangvektorokat képző neurális hálózatot hasonlítottak össze a SincNettel. Beszélőellenőrzés esetén a SincNet sokkal jobb EER-t ért el.
-
+\newpage
 \subsection{VoxCeleb2: Deep Speaker Recognition (2018)}
 
 A VoxCeleb1 és VoxCeleb2 nagy méretű, beszélőfelismerés céljából készült adatbázisok. Az előbbi több mint 1000, utóbbi pedig több mint 6000 hangmintát tartalmaz hírességektől. Az adatbázisok felépítésének részleteit a \ref{voxceleb1} és \ref{voxceleb2} fejezetek ismertetik. Mindkét adatbázissal végeztek méréseket különböző neurális hálózatokkal, de a legjobb eredményeket illetve nyílt-halmazú beszélőfelismerést a VoxCeleb2-vel érték el.
@@ -358,3 +365,33 @@ ahol \emph{C\_miss} és \emph{C\_fa} alkalmazás specifikus paraméterek a hamis
 	\caption{Beszélő ellenőrzés (verifikáció) eredményei.}
 	\label{fig:sincnet-verification}
 \end{table}
+
+\newpage
+
+\subsection{Utterance-level Aggregation for Speaker Recognition in the Wild (2019)}
+
+A cikk két fő témája egy olyan neurális hálózat létrehozása, amely képes különböző hosszúságú hangmintákból jellemző vektorokat képezni és olyan hangminták vizsgálata amelyek irreleváns zajokat is tartalmaznak.
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=150mm, keepaspectratio]{figures/frame-cnn.png}
+	\caption{Neurális hálózat architektúra.}
+	\label{fig:frame-cnn}
+\end{figure}
+\ \\
+\newline
+\newline
+A hálózat három részből áll. Először egy módosított ResNet architektúrát használnak a keretszintű vektorok előállítására spektrogramokból. Az ábrán látható megosztott CNN-t hívjuk trönk hálózatnak. A keretszintű vektorok aggregálását a NetVLAD illetve GhostVLAD (Vector of Locally Aggregated Descriptors módszeren alapuló) hálózatokkal végzik. Legvégül egy FC (Fully Connected) réteget használnak a dimenzió 512-re csökkentésére.
+\newline
+\newline
+A teljes modell end-to-end tanítására a VoxCeleb2 adatbázist használták és tesztelésként beszélőellenőrzést (verifikációt) mértek a VoxCeleb1-en.
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=150mm, keepaspectratio]{figures/frame-cnn-results.png}
+	\caption{Neurális hálózat architektúra.}
+	\label{fig:frame-cnn-results}
+\end{figure}
+\ \\
+A \ref{fig:frame-cnn-results} táblázat mutatja a verifikációval mért EER-eket az akkori legkorszerűbb rendszerekkel szemben. Az addigiaknál lényegesen jobb EER-t értek el ezzel a módszerrel.
+
+

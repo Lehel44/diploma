@@ -1,5 +1,34 @@
 %----------------------------------------------------------------------------
-\chapter{Háttérismeretek}
+\chapter{Bevezetés}
+
+\textbf{Kontextus.} Biometrikus felhasználó azonosítás során a felhasználót saját biológiai jellemzői alapján azonosítjuk. A biometrikus azonosító rendszer a felhasználók biometrikus adatait tárolja és ezek segítségével azonosítja őket. Ezen módszer széleskörű megjelenése a mobiltelefonok fejlődésének köszönhető. Az újabb okostelefonok már képesek ujjlenyomat, arc és hang alapú azonosításra is.
+\newline
+\newline
+A biometrikus azonosításnak számos előnye van a mai hagyományos jelszó alapú bejelentkezéssel szemben. Jelszavakat elveszíthetünk, eltulajdoníthatják tőlünk, illetve ha valaki hozzáfér az email fiókunkhoz már a kétfaktoros jelszavas autentikáció sem biztosít elegendő védelmet. A biometrikus jellemzők egyedik és fizikailag a felhasználóhoz tartoznak ezért nehéz megszemélyesíteni őket és jóval nagyobb védelmet biztosítanak a jelszavaknál. A nagyobb védelmen kívül gyorsabb és kényelmesebb használni őket, a jelszavakkal ellentétben nem kell emlékezzünk rájuk.
+\newline
+\newline
+\textbf{Probléma.} A jelenleg elterjedt biometrikus azonosítási módszerek körében a biometrikus jel rögzítéséhez bonyolult és drága eszközökre van szükség (retinaszkenner, ujjlenyomat olvasó, digitális tábla aláíráshoz stb.).
+\newline
+\newline
+A biometrikus azonosítási módszerek közül kevésbé elterjedt és jelenleg nagyon kutatott téma a hangalapú felhasználó azonosítás. Ennek előnye, hogy a hang rögzítéséhez nincs szükség drága vagy csak az újabb okostelefonokban található rendszerekre (retinaszkenner, ujjlenyomatolvasó), csupán egy mikrofonra és felhasználói szempontból is kényelmes.
+\newline
+\newline
+Napról napra újabb módszerek, modellek jelennek meg, amelyek nincsenek egységesen rendszerezve, összehasonlítva. Továbbá nem létezik olyan szabad szoftver amellyel tetszőleges modellt használva szimulálhatunk egy beszélőfelismerő rendszert.
+\newline
+\newline
+\textbf{Megvalósítás.} Dolgozatomban bemutatom a beszélőfelismerés fejlődését, megvizsgálom a mai modern neurális hálózat alapú beszélőfelismerő rendszereket, a rendelkezésre álló beszédadatbázisokat. Bemutatok részletesen két beszélőfelismerő modellt, majd meta tanítás alapú optimizációs technikákat. Végül ismertetem az általam implementált android prototípus alkalmazást hangalapú biometrikus azonosításhoz.
+\newline
+\newline
+\textbf{Cél.} A hosszú távú cél egy olyan beszélőfelismerő rendszer létrehozása, amely segítségével összehasonlíthatjuk a különböző modellek teljesítményét, illetve egy beszélőfelismerő android kliens oldali alkalmazás létrehozása hangalapú autentikációhoz.
+\newline
+\newline
+\textbf{Kontribúciók.} A dolgozatom a következő kontribúciókat tartalmazza:
+\begin{itemize}
+	\item Módosított Wavenet architektúra teljesítményének mérése beszélőfelismerésre.
+	\item Mérések a voicemap modellen: VoxCeleb adatbázis, triplet loss.
+	\item Android prototípus alkalmazás beszélőfelismerésre.
+\end{itemize} 
+
 
 \section{Biometrikus azonosítás}
 

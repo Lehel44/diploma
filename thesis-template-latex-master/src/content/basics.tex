@@ -4,7 +4,7 @@
 \textbf{Kontextus.} Biometrikus felhasználó azonosítás során a felhasználót saját biológiai jellemzői alapján azonosítjuk. A biometrikus azonosító rendszer a felhasználók biometrikus adatait tárolja és ezek segítségével azonosítja őket. Ezen módszer széleskörű megjelenése a mobiltelefonok fejlődésének köszönhető. Az újabb okostelefonok már képesek ujjlenyomat, arc és hang alapú azonosításra is.
 \newline
 \newline
-A biometrikus azonosításnak számos előnye van a mai hagyományos jelszó alapú bejelentkezéssel szemben. Jelszavakat elveszíthetünk, eltulajdoníthatják tőlünk, illetve ha valaki hozzáfér az email fiókunkhoz már a kétfaktoros jelszavas autentikáció sem biztosít elegendő védelmet. A biometrikus jellemzők egyedik és fizikailag a felhasználóhoz tartoznak ezért nehéz megszemélyesíteni őket és jóval nagyobb védelmet biztosítanak a jelszavaknál. A nagyobb védelmen kívül gyorsabb és kényelmesebb használni őket, a jelszavakkal ellentétben nem kell emlékezzünk rájuk.
+A biometrikus azonosításnak számos előnye van a mai hagyományos jelszó alapú bejelentkezéssel szemben. Jelszavakat elveszíthetünk, eltulajdoníthatják tőlünk, illetve ha valaki hozzáfér az email fiókunkhoz már a kétfaktoros jelszavas autentikáció sem biztosít elegendő védelmet~\cite{nicolls_2019}. A biometrikus jellemzők egyedik és fizikailag a felhasználóhoz tartoznak ezért nehéz megszemélyesíteni őket és jóval nagyobb védelmet biztosítanak a jelszavaknál. A nagyobb védelmen kívül gyorsabb és kényelmesebb használni őket, illetve a jelszavakkal ellentétben nem kell emlékezzünk rájuk.
 \newline
 \newline
 \textbf{Probléma.} A jelenleg elterjedt biometrikus azonosítási módszerek körében a biometrikus jel rögzítéséhez bonyolult és drága eszközökre van szükség (retinaszkenner, ujjlenyomat olvasó, digitális tábla aláíráshoz stb.).
@@ -19,7 +19,7 @@ Napról napra újabb módszerek, modellek jelennek meg, amelyek nincsenek egysé
 \textbf{Megvalósítás.} Dolgozatomban bemutatom a beszélőfelismerés fejlődését, megvizsgálom a mai modern neurális hálózat alapú beszélőfelismerő rendszereket, a rendelkezésre álló beszédadatbázisokat. Bemutatok részletesen két beszélőfelismerő modellt, majd meta tanítás alapú optimizációs technikákat. Végül ismertetem az általam implementált android prototípus alkalmazást hangalapú biometrikus azonosításhoz.
 \newline
 \newline
-\textbf{Cél.} A hosszú távú cél egy olyan beszélőfelismerő rendszer létrehozása, amely segítségével összehasonlíthatjuk a különböző modellek teljesítményét, illetve egy beszélőfelismerő android kliens oldali alkalmazás létrehozása hangalapú autentikációhoz.
+\textbf{Cél.} A hosszú távú cél egy olyan beszélőfelismerő rendszer létrehozása, amely segítségével összehasonlíthatjuk a különböző modellek teljesítményét, illetve egy általánosan felhasználható beszélőfelismerő alkalmazás létrehozása hangalapú autentikációhoz.
 \newline
 \newline
 \textbf{Kontribúciók.} A dolgozatom a következő kontribúciókat tartalmazza:
@@ -32,16 +32,17 @@ Napról napra újabb módszerek, modellek jelennek meg, amelyek nincsenek egysé
 
 \section{Biometrikus azonosítás}
 
-A biometria az emberek fizikai jellemzőinek mérésével és elemzésével foglalkozik. Alkalmazását tekintve három területet különböztetünk meg:
+A biometria az emberek fizikai jellemzőinek mérésével és elemzésével foglalkozik. Alkalmazását tekintve három területet különböztetünk meg~\cite{gemalto_2019}:
 
 \begin{itemize}
-	\item Felhasználó ellenőrzés: Az azonosító rendszer a biometrikus adatot egy, korábban vetthez hasonlítja. Ez alapján dönt, hogy a felhasználó hozzáférhet-e a kívánt erőforráshoz. Ilyen egy ujjlenyomat-olvasóval ellátott mobiltelefonon a képernyőzár feloldása. A felhasználó ellenőrzés arra ad választ, hogy az illető az-e akinek mondja magát.
+	\item Felhasználó ellenőrzés: Az azonosító rendszer a biometrikus adatot egy, korábban rögzített mintához hasonlítja. Ez alapján dönt, hogy a felhasználó hozzáférhet-e a kívánt erőforráshoz. Ilyen egy ujjlenyomat-olvasóval ellátott mobiltelefonon a képernyőzár feloldása. A felhasználó ellenőrzés arra ad választ, hogy az illető az-e akinek mondja magát.
 	\item Felhasználó azonosítás: Az azonosító rendszer a biometrikus adatot több korábban vett mintához hasonlítja és arra ad választ, hogy ki a felhasználó; azaz beletartozik-e a korábban eltárolt biometrikus adatokból álló csoportba vagy nem. Ilyen lehet például egy ujjlenyomat-leolvasóval ellátott beléptetőrendszer cégek esetében.
 	\item Duplikátum detektálás: Annak ellenőrzése, hogy egy felhasználó egynél többször szerepel-e egy adatbázisban. Csalások, például szociális támogatást többször igénylők kiszűrésére használják.
 \end{itemize}
-
+\ \\
 Az első biometrikus azonosítási eljárás az ujjlenyomatvételen alapuló személyiségazonosítás volt, amely a modern kriminalisztika világában terjedt el, de manapság már megtalálható okostelefonokban, biometrikus beléptetőrendszerekben is.
-
+\newline
+\newline
 A biometrikus azonosítást az ún. biometrikus azonosító rendszer végzi el. A folyamat során a biometrikus azonosító rendszer mintát vesz az azonosítandó egyén egy vagy több előre meghatározott fizikai jellemzőjéről, és ezekről digitális lenyomatokat képez. Az első, regisztrációs fázisban a biometrikus minta lenyomatát a rendszer egy adatbázisban eltárolja, majd később az azonosítás során az aktuális mintát összeveti a korábban rögzítettel és dönt az egyezésről. Ahhoz, hogy az ember egy fizikai jellemzőjét biometrikus adatként használhassuk, a következő elvárásokat támasztjuk vele szemben:
 
 \begin{itemize}
@@ -56,8 +57,29 @@ A biometrikus azonosítást az ún. biometrikus azonosító rendszer végzi el. 
 
 A biometrikus adat lehet fiziológiai (DNS, arc, ujjlenyomat, írisz) vagy viselkedési (hang, írás, gesztusok). Mivel ezek az adatok statisztikai jellegűek, megbízhatóságuk változó. Minél több adat van egy mintában, annál egyedibb, és minél nagyobb a releváns populáció (eltárolt minták összessége), annál valószínűbb, hogy találunk két hasonló mintát. Ennek elkerülésére manapság terjednek a multimódusú biometrikus azonosító rendszerek, amelyek több biometrikus adatot felhasználva végzik ez az ellenőrzés, azonosítás és duplikátum detektálás feladatát. 
 
-\section{Equal Error Rate}
+\section{Biometrikus rendszerek teljesítménye}
 
+A beszélőfelismerő rendszerek teljesítményének mérésekor a fel nem ismert beszélőket és a rosszul felismert beszélőket vesszük figyelembe. Míg az előbbi kisebb probléma, hiszen a felhasználó újra próbálkozhat, egy illetéktelen felhasználó téves azonosítása jelentős biztonsági rés, ezért minimalizálnunk kell azt.
+\newline
+\newline
+Egy beszélőfelismerő rendszernek kétfajta feladatot adhatunk~\cite{van_leeuwen_2007}:
+\begin{itemize}
+	\item célzott próba: Két hangmintát adunk a rendszernek egyazon beszélőtől.
+	\item nem célzott próba: Két hangmintát adunk a rendszernek két különböző beszélőtől.
+\end{itemize} 
+
+Mindkét esetben a rendszernek a feladata eldönteni, hogy a két hangminta ugyanattól a felhasználótól származik-e, vagyis megkülönböztetni a célzott és nem célzott próbákat egymástól.
+A felismerő rendszer mindkét próba esetén tévedhet, ez két féle hibát von maga után:
+
+\begin{itemize}
+	\item hamis pozitív vagy téves riasztás: Egy nem célzott próbát célzottnak tekint.
+	\item hamis negatív vagy téves visszautasítás: Egy célzott próbát nem célzottnak tekint.
+\end{itemize} 
+
+A teljesítmény mérése több módszer is létezik. A NIST a \emph{Detection Cost Function ($C_{det})$} metrikát ajánlja, de ez alkalmazásfüggő. Ebben a fejezetben az EER mérőszámot mutatom be, mert kiszámolása jóval egyszerűbb és nem tartalmaz alkalamazásfüggő paramétereket.
+
+\subsection{Equal Error Rate}
+\ \\
 Az \emph{Equal Error Rate (EER)} vagy \emph{Crossover Rate (CER)} a biometrikus rendszerek teljesítményének mérésére használatos mérőszám. Az \emph{EER} segítségével tudjuk eldönteni ellenőrzés vagy azonosítás esetén a döntési küszöbérték szintjét, amely mellett a rendszer legjobban teljesít, azaz így optimizáljuk azt. Például beszélőfelismerés esetén két hang különbségét valamekkora távolsággal jellemezzük. Ebben az esetben a küszöbérték alatt azt a távolságot értjük amely szintje alatt a két beszélőt azonosnak, fölötte különbözőnek tekintjük.
 \newline
 \newline
@@ -73,7 +95,7 @@ A biometrikus rendszereket három fontos mérőszámmal jellemezzük. Az FAR, az
 Az EER az a pont, ahol az FAR értéke megegyezik az FRR-el.
 \newline
 \newline
-A biometrikus rendszerek karakterisztikáját a \ref{fig:eer} ábra szemlélteti. Vegyük a beszélőazonosító rendszer példáját. Látható, hogy a döntési küszöb növelése (mekkora távolság esetén tekintjük azonosnak a két beszélőt) esetén az \emph{FAR} nő és az \emph{FRR} csökken. Ez normális, mert ilyenkor megengedőbbek vagyunk, nagyobb távolság esetén is azonosnak tekintjük a két beszélőt, így több olyan eset lesz amikor két beszélő különbözik, a rendszer mégis azonosnak tekinti őket és kevesebb olyan amikor két beszélő azonos és a rendszer mégis visszautasít. 
+A biometrikus rendszerek karakterisztikáját a \ref{fig:eer} ábra szemlélteti. Vegyük egy beszélőfelismerő rendszer példáját. Látható, hogy a döntési küszöb növelése (mekkora távolság esetén tekintjük azonosnak a két beszélőt) esetén az \emph{FAR} nő és az \emph{FRR} csökken. Ez normális, mert ilyenkor megengedőbbek vagyunk, nagyobb távolság esetén is azonosnak tekintjük a két beszélőt, így több olyan eset lesz amikor két hangminta különböző beszélőktől származik, a rendszer mégis azonosnak tekinti őket és kevesebb olyan amikor két hangminta azonos beszélőtől van és a rendszer mégis visszautasítja. 
 \newline
 \newline
 Ha a küszöböt csökkentjük szigorúbb lesz a rendszer, sokkal kevesebb téves elfogadás lesz, de a szigorúság miatt megnő a téves viszautasítások száma.
@@ -87,12 +109,12 @@ Az EER a két grafikon metszéspontjában található, ahol FAR és FRR értéke
 	\caption{Biometrikus rendszerek karakterisztikája.}
 	\label{fig:eer}
 \end{figure}
-
-
-
+\ \\
+Az EER minimalizálásával tehát maximalizáljuk a biometrikus rendszer teljesítményét abból a szempontból, hogy a lehetséges hibák száma így a legkevesebb.
+\newpage
 \section{Beszélőfelismerés}
 
-Az emberi kommunikáció során fontos feladat a beszélő partner felismerése. A telekommunikációs technológia fejlődése miatt elterjedt a telefonon vagy interneten történő hangalapú kommunikáció; a telefonos felhasználófelismerés mint biometrikus azonosítási módszer megjelent már banki alkalmazásokban, call centerekben és az elektronikus kereskedelemben is (mobiltelefonos vásárlás). Az elektronikus kommunikáció során sokszor csak a beszélő hangjára hagyatkozhatunk, az alapján ismerhetjük fel az illetőt. A beszélőfelismerést háromféle módon végezhetjük:
+Az emberi kommunikáció során fontos feladat a beszélő partner felismerése. A telekommunikációs technológia fejlődése miatt elterjedt a telefonon vagy interneten történő hangalapú kommunikáció; a telefonos felhasználófelismerés mint biometrikus azonosítási módszer megjelent már banki alkalmazásokban, call centerekben és az elektronikus kereskedelemben is (mobiltelefonos vásárlás). Az elektronikus kommunikáció során sokszor csak a beszélő hangjára hagyatkozhatunk, az alapján ismerhetjük fel az illetőt. A beszélőfelismerést háromféle módon végezhetjük~\cite{taufiq_2015}:
 
 \begin{itemize}
 	\item Naiv beszélőfelismerés: Az emberi, naiv beszélőfelismerés során az ismerős hangokat meglepően nagy pontossággal ismerjük fel.
@@ -100,24 +122,29 @@ Az emberi kommunikáció során fontos feladat a beszélő partner felismerése.
 	\item Automatikus beszélőfelismerés: A beszélőfelismerést számítógépes rendszer végzi.
 \end{itemize}
 
-A beszélőfelismerés alatt három szűkebb fogalmat értünk. Ha a folyamat során az ismeretlen beszélőről azt ellenőrizzük, hogy az-e akinek állítja magát beszélő ellenőrzésről van szó. Beszélő szegmentáláskor a hangmintát homogén csoportokra bontjuk a beszélő személye alapján. Végül beszélő azonosításról beszélünk, ha az illető hangját rögzített hangok egy csoportjával vetjük össze és azt szeretnénk eldönteni, hogy melyikhez hasonlít a legjobban. Utóbbi felveti a kérdést, hogy mi történik ha a beszélő nem tagja a csoportnak. 
-
+A beszélőfelismerés alatt három szűkebb fogalmat értünk. Ha a folyamat során az ismeretlen beszélőről azt ellenőrizzük, hogy az-e akinek állítja magát beszélő ellenőrzésről van szó. Beszélő szegmentáláskor a hangmintát homogén csoportokra bontjuk a beszélő személye alapján. Végül beszélő azonosításról beszélünk, ha az illető hangját rögzített hangok egy csoportjával vetjük össze és azt szeretnénk eldönteni, hogy melyikhez hasonlít a legjobban. Utóbbi felveti a kérdést, hogy mi történik ha a beszélő nem tagja a csoportnak.
+\newline
+\newline
 Emiatt megkülönböztetjük a nyitott és zárt halmazú beszélőazonosítást. Utóbbi esetén csak olyan beszélőket ismerünk fel, akikről van hangminta az adatbázisban, míg az előbbinél ismeretlen beszélők is megjelenhetnek, így ezt is kezelni kell.
-
-A beszélőfelismerés továbbá lehet szöveg-függő és szöveg-független attól függően, hogy a felismerő rendszer egy előre meghatározott mondatot vár, vagy bármilyen hangminta alapján működik.
+\newline
+\newline
+A beszélőfelismerés továbbá lehet szövegfüggő és szövegfüggetlen attól függően, hogy a felismerő rendszer egy előre meghatározott mondatot vár, vagy bármilyen hangminta alapján képes elvégezni a felismerést.
 
 \section{Az automatikus beszélőfelismerés története}
 
-Az automatikus beszélőfelismerést egy számítógépes program végzi emberi beavatkozás nélkül. Az első automatikus beszédfelismerő rendszert a Texas Instruments fejlesztetése volt és 1977-ben publikálták. A rendszer szövegfüggő beszélőellenőrzésre volt képes és az évek során a téves elutasítási és elfogadási rátája 1$\%$ alatt maradt. A hetvenes évek óta a a beszélőazonosító és ellenőrző rendszerek rengeteget fejlődtek kezdve a vektor kvantálástól kezdve a GMM modelleken át a mély neurális hálókig. 
+Az automatikus beszélőfelismerést egy számítógépes program végzi emberi beavatkozás nélkül. Az első automatikus beszédfelismerő rendszert a Texas Instruments fejlesztetése volt és 1977-ben publikálták~\cite{Shaver2016ABR}. A rendszer szövegfüggő beszélőellenőrzésre volt képes és az évek során a téves elutasítási és elfogadási rátája 1$\%$ alatt maradt. A hetvenes évek óta a beszélőazonosító és ellenőrző rendszerek rengeteget fejlődtek kezdve a vektor kvantálástól a GMM modelleken át a mély neurális hálókig.
 
 \begin{figure}[!ht]
 	\centering
 	\includegraphics[width=150mm, keepaspectratio]{figures/automatic_speaker_recognition.png}
-	\caption{Automatikus beszélőfelismerő rendszer architektúrája.}
+	\caption{Korábbi automatikus beszélőfelismerő rendszerek architektúrája~\cite{finnian_2014}.}
 	\label{fig:automatic_speaker_recognition}
 \end{figure}
-
-Az automatikus beszélőfelismerő általános működését az alábbi (!) ábra szemlélteti. A beszélő-ellenőrzés és beszélőazonosítás során is az első lépés rögzített \emph{jellemzők kinyerése}. Ezután az első, \emph{tanító fázisban} referencia modelleket készítünk az egyes beszélőkhöz a jellemzők alapján, amelyeket eltároljuk a beszélő adatbázisban. Beszélő-ellenőrzés esetén ebben a fázisban egy küszöbérték is meghatározásra kerül. \emph{Teszt fázisban} a rendszer kinyeri ugyanazokat a jellemzőket az aktuális hangmintából, majd \emph{jellemző összehasonlítás} történik.
+\ \\
+Az automatikus beszélőfelismerő általános működését a \ref{fig:automatic_speaker_recognition} ábra szemlélteti. Működését tekintve két fázist különböztetünk meg: A regisztrációs vagy felvételi fázisban hangmintát veszünk a felhasználótól~\cite{finnian_2014}. Később az azonosítási vagy ellenőrzési fázisban a rendszer újabb mintát kér és az előbbi fázisban eltárolt hangmintával hasonlítja össze. 
+\newline
+\newline
+Mindkét fázis során az első lépés rögzített, alacsonyabb dimenziós \emph{jellemzők kinyerése}, amelynek során a beszédet tömörebb formára hozzuk (pl. hangvektor). Az első, \emph{regisztrációs fázisban} ezután statisztikai modelleket készít az egyes beszélőkhöz a kinyert jellemzők alapján, amelyeket eltárol a beszélő adatbázisban. Ebben a fázisban egy küszöbérték is meghatározásra kerül. \emph{ellenőrzési fázisban} a rendszer kinyeri ugyanazokat a jellemzőket az aktuális hangmintából, majd egy \emph{mintaillesztés} nevű eljárással összehasonlítja a korábban tárolt modellt a jellemzőkkel. Az összehasonlítás eredményét és a küszöbértéket figylembe véve a rendszer dönt az azonosítás vagy ellenőrzés eredményéről.
 
 \begin{enumerate}
 	\item beszélő-ellenőrzés esetén megkeresi az ellenőrizendő személyhez tartozó modellt az adatbázisban és összehasonlítja az aktuális jellemzőkkel. Ha az eredmény a küszöbszint felett van, a rendszer egyezést mutat.
@@ -125,8 +152,9 @@ Az automatikus beszélőfelismerő általános működését az alábbi (!) ábr
 \end{enumerate}
 
 \subsection{Jellemző kinyerés}
-A jellemző kinyerés célja a dimenzió csökkentése és a beszélőspecifikus információk kinyerése. Mivel a beszéd komplex jel, a beszélő azonosítása szempontjából felesleges információkat is hordoz. Ilyen például a környezet és a csatorna zaja. A kinyert jellemzőket a hangminta terjedelme alapján osztályozzuk. \emph{Rövidtávú jellemzők} a 20-30 ms-os keretekből kinyert mel-frekvenciás és lineáris prediktív kepsztrális együtthatók (MFCC és LPCC). A \emph{prozódikus jellemzők} kinyerése 100 ms-os terjedelemben történik és a beszéd ritmusát, a hangmagasságot és a sebességet jellemzik. A hosszútávú jellemzőket a jel akár perc hosszú kereteiből nyerjük ki. Ezek képesek reprezentálni a beszélő akcentusát illetve a szavak szemantikáját és az idiolektust.
-
+A jellemző kinyerés célja a dimenzió csökkentése és a beszélőspecifikus információk kinyerése. Mivel a beszéd komplex jel, a beszélő azonosítása szempontjából felesleges információkat is hordoz. Ilyen például a környezet és a csatorna zaja. A kinyert jellemzőket a hangminta terjedelme alapján osztályozzuk. \emph{Rövidtávú jellemzők} a 20-30 ms-os keretekből kinyert mel-frekvenciás és lineáris prediktív kepsztrális együtthatók (MFCC és LPCC)~\cite{taufiq_2015}. A \emph{prozódikus jellemzők} kinyerése 100 ms-os terjedelemben történik és a beszéd ritmusát, a hangmagasságot és a sebességet jellemzik. A hosszútávú jellemzőket a jel akár perc hosszú kereteiből nyerjük ki. Ezek képesek reprezentálni a beszélő akcentusát illetve a szavak szemantikáját és az idiolektust.
+\newline
+\newline
 A beszélőfelismerő rendszerek teljesítményét javította, ha a jellemzőket csak
 a hangminta azon részeiből nyerték ki, amikben beszéd is volt. Erre alkalmazott technika a \emph{Voice Activation Detection} (\emph{VAD}).
 
@@ -136,17 +164,20 @@ Jellemzőkinyerés során próbáljuk kiszűrni a beszélő szempontjából ért
 
 \subsection{A beszélőfelismerő modellek története}
 
-Kezdetben a vektor kvantálás volt az elterjed modellezési módszer, amit később a \emph{Gaussian Mixture Model} (\emph{GMM}) váltott fel. A GMM egy adathalmazt több normális eloszlás keverékeként ír le és képes nem felügyelt módon klaszterezni az adatokat. Egy beszélőhöz egy valószínűségi sűrűségfüggvényt rendel, amely különböző pontokban kiértékelve (például teszt fázisban a beszélőtől kinyert jellemzők) egy valószínűséget ad a két beszélő hasonlóságára.
-
+Kezdetben a vektor kvantálás volt az elterjed modellezési módszer, amit később a \emph{Gaussian Mixture Model} (\emph{GMM}) váltott fel. A GMM egy adathalmazt több normális eloszlás keverékeként ír le és képes nem felügyelt módon klaszterezni az adatokat. Egy beszélőhöz egy valószínűségi sűrűségfüggvényt rendel, amely különböző pontokban kiértékelve (például teszt fázisban a beszélőtől kinyert jellemzők) egy valószínűséget ad a két beszélő hasonlóságára~\cite{taufiq_2015}.
+\newline
+\newline
 A GMM megközelítés főleg beszélőazonosításra alkalmas. Beszélő-ellenőrzéshez szükség volt egy másik modellre is, ami képes leírni minden más beszélőt az ellenőrizendőn kívül. Erre adott megoldást az \emph{Universal Background Model} (\emph{UBM}). Később jobb teljesítményt értek el, ha a teszt fázisban a beszélőkkel először UBM modelleket tanítottak és ezekből származtattak GMM-eket. Ezt nevezik GMM-UBM módszernek.
-
+\newline
+\newline
 Mivel a tanító és teszt hangminták eltérő hosszúságúak lehetnek, szükség volt egy fix hosszúságú reprezentációra, ezt oldották meg a GMM szupervektorok, amelyeket az akkori megközelítés szerint szupport-vektor gépekkel vagy faktoranalízissel használtak.
-
+\newline
+\newline
 Az utóbbi két módszer előnyeit kombinálva megszületett az $i-vektorok$, amelyet követve eljutunk a mai state-of-the-art módszerhez, a mély neurális hálózatokhoz (DNN).
 
 \section{Korábbi eredmények}
 
-
+A \ref{fig:previous_identification_results} ábra korábbi eredményeket mutat szövegfüggetlen beszélőfelismerő rendszerekről. Megfigyelhető, hogy főleg tízes, százas nagyságrendű beszélővel tanított, zárt-halmazú rendszerekről van szó és a tanító mintákat is többnyire laboratóriumi körülmények között rögzítették. A pontosságot ennek fényében kell értelmezni.
 
 \begin{table}[!ht]
 	\resizebox{\textwidth}{!}{%
@@ -210,24 +241,23 @@ Az utóbbi két módszer előnyeit kombinálva megszületett az $i-vektorok$, am
 	\bottomrule
 	\end{tabular}}
 	\centering
-	\caption{Korábbi eredmények szövegfüggetlen beszélőazonosítás terén.}
-	\label{fig:timit-dialects}
+	\caption{Korábbi eredmények szövegfüggetlen beszélőazonosítás terén 2017 előtt~\cite{singh_2017}.}
+	\label{fig:previous_identification_results}
 \end{table}
 
 \newpage
 
 \section{Modern beszélőfelismerés}
 
-A következő fejezetben bemutatom a 2017-2019-ben publikált korszerű beszélőfelismerő rendszereket és hogy milyen eredményeket értek el. Mivel ez a kutatási terület jelenleg népszerű és folyamatosan újabb eredményeket érnek el, a bemutatott rendszereket a hivatkozások száma, a dátum és a \emph{www.paperswithcode.com} oldal rangsorolása alapján választottam ki.
+A következő fejezetben bemutatom a 2017-2019-ben publikált korszerű beszélőfelismerő rendszereket és az általuk elért eredményeket. Mivel ez a kutatási terület jelenleg népszerű és folyamatosan újabb eredményeket érnek el, a bemutatott rendszereket a hivatkozások száma, a dátum és a \emph{www.paperswithcode.com} oldal rangsorolása alapján választottam ki.
 \newline
 \newline
 Az eredmények általános összehasonlítása több ok miatt is nehéz feladat. A cikkekben a legjobb eredmények feltüntetése miatt relatív eredményeket tartalmaznak egy-egy korábban
-publikált rendszerhez képest. Ezen kívül változik, hogy zárt vagy nyílt-halmazú beszélőfelismerés, beszélő-ellenőrzésről van-e szó, maga a teszthalmaz nehézsége: etnikai, nemi, foglalkozásbeli diverzitás, a hangminták hossza, a hangfelvétel minősége, van-e irreleváns zaj, stb. Továbbá
-a legtöbb cikk nem biztosít letölthető modellt, konfigurációt, szkripteket az előfeldolgozáshoz, így
-azonos környezethez reprodukálni kellene azokat.
+publikált rendszerhez képest. Ezen kívül változik, hogy zárt vagy nyílt-halmazú beszélőfelismerésről, beszélő azonosításról vagy beszélő-ellenőrzésről van-e szó. Változik maga a teszthalmaz nehézsége is: etnikai, nemi, foglalkozásbeli diverzitás, a hangminták hossza, a hangfelvétel minősége, van-e irreleváns zaj, stb. Továbbá
+a legtöbb cikk nem biztosít letölthető modellt, konfigurációt, szkripteket az előfeldolgozáshoz, így azonos környezethez reprodukálni kellene őket.
 
 
-\subsection{Deep Speaker: an End-to-End Neural Speaker Embedding System (2017)}
+\subsection{Deep Speaker: an End-to-End Neural Speaker Embedding (2017) System~\cite{deep_speaker}}
 
 A Deep Speaker egy neurális hálózatokon alapuló embedding rendszer. Az \emph{embedding} kifejezés alatt valamilyen leképzést értünk. Például amikor hangokból hangvektorokat készítünk. A rendszer a hangmintákat egy hipergömbre vetíti, ahol azoknak a hasonlóságát koszinusz távolsággal méri.
 \newline
@@ -245,7 +275,7 @@ Ezeknek az általános felépítése a következőképpen néz ki:
 	\item i-vektorok leképzése (jellemző kinyerés)
 	\item osztályozás (PLDA)
 \end{itemize} 
-Ezek a rendszerek \emph{GMM-UBM} modellt használtak a statisztikák kinyerésére, amiket jellemzőkkel (pl. MFCC) optimalizáltak. A GMM-UBM helyett később
+Ezek a rendszerek GMM-UBM modellt használtak a statisztikák kinyerésére, amiket jellemzőkkel (pl. MFCC) optimalizáltak. A GMM-UBM helyett később
 DNN alapú megoldással is próbálkoztak. A GMM-UBM kimeneteként kapott
 sokdimenziós statisztikákat ezután alacsony dimeziójú i-vektorokká alakítják, amit aztán PLDA modellel osztályoznak és verifikációra használják.
 Jelenleg a mai korszerű rendszerek az első két lépést összevonják és CNN-eket használnak alacsony dimenziós jellemzőkinyerésre.
@@ -269,7 +299,8 @@ Jelenleg a mai korszerű rendszerek az első két lépést összevonják és CNN
 	\caption{Mandarin nyelvű szöveg-független azonosítás eredményei tanításra és tesztelésre a Train50k és Eva200 adathalmazokat használva.}
 	\label{fig:deep-speaker-independent-mandarin-results}
 \end{table}
-
+\newpage
+\ \\
 A legjobb architektúrának a \emph{ResCNN} bizonyult softmax előtanítással és triplet lossal tanítva. Ezzel a \ref{fig:deep-speaker-independent-mandarin-results} szerint Eva200 adathalmazon \emph{90,53\%}-os eredményt értek el. A Train50k, Train250k és Eva200k az UID adathalmaz részei.
 
 \begin{table}[!ht]
@@ -288,13 +319,13 @@ A legjobb architektúrának a \emph{ResCNN} bizonyult softmax előtanítással �
 	\caption{Szöveg-független azonosítás eredményei.}
 	\label{fig:deep-speaker-independent}
 \end{table}
-
+\ \\
 A \ref{fig:deep-speaker-independent} szerint pedig nagyobb adathalmazzal való tanítás nagyobb pontosságot és alacsonyabb EER-t eredményezett. A legjobb eredményt a RestCNN-el érték el Train250k-val tanítva.
 \newline
 \newline
 Az eredmények a korábbi i-vektoros rendszerekhez képest a Deep Speaker 50\% csökkentette az EER-t, és pontosságban 60\%-os javulást ért el.
 
-\subsection{Speaker Recognition from Raw Waveform with SincNet (2018)}
+\subsection{Speaker Recognition from Raw Waveform with SincNet (2018)~\cite{sincnet}}
 
 A SincNet is a korábban használt i-vektoros rendszerek helyett mutat be egy új CNN hálózatot. A CNN-ek előnye, hogy a korábban használt kézzel fabrikált jellemzők (pl. MFCC) helyett a hálózat maga tanulja meg a hang alacsony szintű reprezentációját nyers hullámformákból. Mivel a cikk a CNN-t kiegészíti hangszűrőkkel és a jelfeldolgozásban használatos fogalmakat használ, először ismertetem ezeket:
 \begin{itemize}
@@ -305,7 +336,6 @@ A SincNet is a korábban használt i-vektoros rendszerek helyett mutat be egy ú
 \end{itemize} 
 \ \\
 \newline
-\newline
 A SincNet egy új CNN architektúra, amelyben az első réteg ún. paraméterezhető sinc függvényekkel van kiegészítve, amelyek band pass szűrőket implementálnak.
 \newline
 \newline
@@ -314,11 +344,10 @@ A korábban használt kézzel fabrikált jellemzők, mint az MFCC vagy FBANK ese
 \begin{figure}[!ht]
 	\centering
 	\includegraphics[width=120mm, keepaspectratio]{figures/sincnet-nn.png}
-	\caption{SincNet architektúra.}
+	\caption{SincNet architektúra~\cite{sincnet}.}
 	\label{fig:sincnet-nn}
 \end{figure}
 \ \\
-\newline
 \newline
 A SincNetet a TIMIT (462 beszélő) és Librispeech (2484 beszélő) adatbázisokkal tanították.
 A beszédminták elejéről a szüneteket eltávolították, és LibriSpeech esetén azokat a mintákat, amelyek tartalmaztak legalább 125 ms hosszú szünetet, annak mentén feldarabolták. A TIMIT adatbázisnál egy beszélőtől 5 mintával tanítottak és 3 mintával teszteltek, míg LibriSpeechnél véletlenszerűen választottak 12-16 másodperces mintákkal tanítottak és 2-6 másodpercesekkel teszteltek.
@@ -362,7 +391,7 @@ A \ref{fig:sincnet-identification}-es táblázat a CER (Classification Error Rat
 \newline
 A SincNettel nem jellemző vektorokat képeztek és a köztük lévő távolságot használták a hasonlóság mérésére, hanem osztályozással használják. Ebben az esetben zárt-halmazú beszélőazonosításról beszélünk. Ez sokkal kevésbé flexibilis, mert új beszélő esetén mindig újra kell tanítani a hálózatot, de cserébe jobb teljesítményre képes. A \ref{fig:sincent-verification} ábrán egy d-vector nevű hangvektorokat képző neurális hálózatot hasonlítottak össze a SincNettel. Beszélőellenőrzés esetén a SincNet sokkal jobb EER-t ért el.
 \newpage
-\subsection{VoxCeleb2: Deep Speaker Recognition (2018)}
+\subsection{VoxCeleb2: Deep Speaker Recognition (2018)~\cite{voxceleb2}}
 
 A VoxCeleb1 és VoxCeleb2 nagy méretű, beszélőfelismerés céljából készült adatbázisok. Az előbbi több mint 1000, utóbbi pedig több mint 6000 hangmintát tartalmaz hírességektől. Az adatbázisok felépítésének részleteit a \ref{voxceleb1} és \ref{voxceleb2} fejezetek ismertetik. Mindkét adatbázissal végeztek méréseket különböző neurális hálózatokkal, de a legjobb eredményeket illetve nyílt-halmazú beszélőfelismerést a VoxCeleb2-vel érték el.
 \newline
@@ -397,14 +426,14 @@ ahol \emph{C\_miss} és \emph{C\_fa} alkalmazás specifikus paraméterek a hamis
 
 \newpage
 
-\subsection{Utterance-level Aggregation for Speaker Recognition in the Wild (2019)}
+\subsection{Utterance-level Aggregation for Speaker Recognition in the Wild (2019)~\cite{speaker_in_the_wild}}
 
 A cikk két fő témája egy olyan neurális hálózat létrehozása, amely képes különböző hosszúságú hangmintákból jellemző vektorokat képezni és olyan hangminták vizsgálata amelyek irreleváns zajokat is tartalmaznak.
 
 \begin{figure}[!ht]
 	\centering
 	\includegraphics[width=150mm, keepaspectratio]{figures/frame-cnn.png}
-	\caption{Neurális hálózat architektúra.}
+	\caption{Neurális hálózat architektúra~\cite{speaker_in_the_wild}.}
 	\label{fig:frame-cnn}
 \end{figure}
 \ \\
@@ -417,7 +446,7 @@ A teljes modell end-to-end tanítására a VoxCeleb2 adatbázist használták é
 \begin{figure}[!ht]
 	\centering
 	\includegraphics[width=150mm, keepaspectratio]{figures/frame-cnn-results.png}
-	\caption{Neurális hálózat architektúra.}
+	\caption{Neurális hálózat architektúra~\cite{speaker_in_the_wild}.}
 	\label{fig:frame-cnn-results}
 \end{figure}
 \ \\

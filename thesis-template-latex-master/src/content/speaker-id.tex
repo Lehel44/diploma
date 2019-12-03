@@ -1,7 +1,7 @@
 \chapter{Beszédadatbázisok}
 
 A fejezet bemutatja a jelenleg ingyenes, bárki által elérhető és a tanítás során használt beszédadatbázisokat. Egy beszédadatbázis előállítása bár ránézésre egyszerű feladatnak tűnik,
-valójában komplex folyamat és sok munkát igényel. Egyes adatbázisokat beszédfelismerés céljából készítettek, másokat beszélőfelismerésre. Az előbbinél kontrollált körülmények előállítása, megfelelés egyes nyelvtani mérőszámoknak (fonémák, diádok egyenletes elosztása stb.), utóbbinál a nagyobb méret miatt az automatizmus szükségessége bonyolítja a feladatot, valamint mindkét esetben a szerzői jogok védelmére is ügyelni kell. (A dolgozatban a beszédadatbázis, beszédkorpusz és beszédadathalmaz ugyanarra vonatkozik.)
+valójában komplex folyamat és sok munkát igényel. Egyes adatbázisokat beszédfelismerés céljából készítettek, másokat beszélőfelismerésre. Az előbbinél kontrollált körülmények előállítása, megfelelés egyes nyelvtani mérőszámoknak (fonémák, diádok egyenletes elosztása stb.), utóbbinál a nagyobb méret miatt az automatizmus szükségessége bonyolítja a feladatot. Ezen felül mindkét esetben a szerzői jogok védelmére is ügyelni kell. (A dolgozatban a beszédadatbázis, beszédkorpusz és beszédadathalmaz ugyanarra vonatkozik.)
 
 \section{Beszédadatbázisok}
 
@@ -10,8 +10,8 @@ valójában komplex folyamat és sok munkát igényel. Egyes adatbázisokat besz
 A TIMIT beszédkorpuszt automatikus beszédfelismerő rendszerek fejlesztéséhez tervezték. 630 beszélőtől tartalmaz mintákat amerikai angol nyelven a 8 legelterjedtebb nyelvjárásban.
 A TIMIT archívum tartalmaz egy TRAIN és egy TEST mappát, ezek tanításhoz és teszteléshez valók. Ezeken belül további, a dialektusok sorszámával (DR1, ..., DR8), azon belül a beszélő azonosítójával elnevezett könyvtárak találhatók. Egy beszélőhöz
 10 db beszédminta tartozik 16 kHz-es NIST SPHERE fájlok formájában.
-
-
+\newline
+\newline
 \begin{table}[!ht]
 	\begin{tabular}{*4l} \toprule
 		\bfseries Dialektus regió (DR) & \bfseries Férfi & \bfseries Nő & \bfseries Összesen \\ \midrule
@@ -34,7 +34,7 @@ A TIMIT archívum tartalmaz egy TRAIN és egy TEST mappát, ezek tanításhoz é
 	\caption{A beszélők eloszlása dialektusok szerint.}
 	\label{fig:timit-dialects}
 \end{table}
-
+\newpage
 A dialektus régiók a következők:
 
 \begin{multicols}{2}
@@ -49,9 +49,10 @@ A dialektus régiók a következők:
 		\item DR8:  Army Brat (moved around)
 	\end{itemize}
 \end{multicols}
-
+\ \\
 A NIST SPHERE formátum az elején definiál egy fix hosszú fejlécet, amit a hang bináris kódolása követ. Erre figyelni kell a hangfájlok beolvasásánál, Python esetében nem minden hangfeldolgozó könyvtár támogatja. Ilyen esetben kézzel el kell távolítani a fejlécet a fájlok elejéről. A hangfájlokhoz tartozik egy szöveges dokumentum ami az elhangzott szöveget és annak a wav fájlbeli helyét tartalmazza. Továbbá egy WRD fájl írja le a szavakat és egy PHN kiterjesztésű a fonémákat, illetve azok időbeni elhelyezkedését a wav fájlban.
-
+\newline
+\newline
 A hangfájlokhoz tartozó egyéb fájlok beszédfelismerés szempontjából fontosak. Mivel én a beszédkorpuszt beszélőfelismerésre használtam, csak a hangfájlokra volt szükségem. A TEST mappában - mivel a TIMIT-et alapvetően beszédfelismeréshez tervezték - teljesen különböző beszélők vannak a TRAIN mappához képest, ezért a TRAIN mappabeli beszélőket kell felosztani tanításhoz és teszteléshez.
 
 \subsection{CMU Arctic}
@@ -81,7 +82,8 @@ A CMU Arctic eleinte 2,5 millió szóból és az azokat tartalmazó 168000 monda
 \newline
 \newline
 Ezután a Festvox segítségével az 52000 mondatból kiválogatták a legnagyobb diád lefedettségű halmazt. A diád két egymás utáni félhang együtteseként előálló nyelvi egység, amely lefedettségének mértéke a beszédszintézis során előállított beszéd minősége miatt fontos. 
-
+\newline
+\newline
 A kiválogatott részt kivéve egy újabb halmazt választottak ki, amelyek 668 és 629 mondatból álltak. Ezeket manuálisan átnézve tovább finomították.
 
 \begin{table}[!ht]
@@ -98,7 +100,7 @@ A kiválogatott részt kivéve egy újabb halmazt választottak ki, amelyek 668 
 	\caption{Arctic CMU automatikus és kézi fázisok.}
 	\label{fig:arctic-phases}
 \end{table}
-
+\ \\
 A CMU Arctic diád lefedettsége 80\% és az előbbihez hasonlóan triád lefedettsége 14\%. Az előbbi megelőzi mint a TIMIT beszédkorpuszban lévő diád lefedettséget, utóbbiban viszont a TIMIT jobb a több (2343) mondat miatt.
 
 \begin{table}[!ht]
@@ -155,7 +157,7 @@ A harmadik fázis ezeknek az apróbb szegmensekre tördelése volt, amit két m�
 	\caption{LibriSpeech részhalmazok.}
 	\label{fig:librispeech-subset}
 \end{table}
-\bigskip
+\ \\
 Az audiófelvételek válogatásához a LibriVox API segítségével szereztek információkat a felolvasóról,
 hogy mely hangoskönyvekben olvastak fel milyen fejezeteket, a kapcsolódó referencia szövegeket pedig a Gutenberg Project és Internet Archiveból nyerték ki. A train, dev és test részhalmazok között fontos, hogy ne legyen átfedés, tehát ugyanaz az olvasó ne olvasson csak egyetlen halmazban ezek közül. Ehhez a válogatáson kívül további óvintézkedésként kivették a többszereplős fejezeteket és lefuttaták a LIUM beszélő szegmentáló toolkitet ennek detektálására.
 \newline
@@ -184,8 +186,7 @@ A beszélőfelismerésre használt adatbázisok kontrollált körülmények köz
 	\caption{Beszédadatbázisok beszédfelismerés.}
 	\label{fig:speaker-recognition-datasets}
 \end{table}
-
-\bigskip
+\ \\
 A VoxCeleb több mint 100000 olyan beszédmintát tartalmaz 1251 hírességtől, amik YouTube videókból származnak. Az adatbázisban a nemek aránya kiegyensúlyozott (férfiak 55\%, nők 45\%), a beszélők különböző származásúak, korúak illetve eltérő akcentussal rendelkeznek. A beszéd általában publikus eseményekről származik, így a háttérzaj, egyéb beszélők és a felvevő eszköz minősége zajossá teszi azt.
 \newline
 \newline

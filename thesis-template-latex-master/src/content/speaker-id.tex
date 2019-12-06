@@ -241,7 +241,7 @@ Ebben a fejezetben bemutatom a legújabb korszerű, mély neurális hálózaton 
 \newline
 Fontos különbség, hogy míg a WaveNet classifier csupán zárthalmazú beszélőfelismerésre képes, a voicemap más elven, hangvektorokkal működik, ezért támogatja a nyílthalmazú beszélőfelismerést.
 
-\section{Modern beszélőfelismerés}
+\section{Modern beszélőfelismerés} \label{section:modern_speaker_recognition}
 
 A következő fejezetben bemutatom a 2017-2019-ben publikált korszerű beszélőfelismerő rendszereket és az általuk elért eredményeket. Mivel ez a kutatási terület jelenleg népszerű és folyamatosan újabb eredményeket érnek el, a bemutatott rendszereket a hivatkozások száma, a dátum és a \emph{www.paperswithcode.com} oldal rangsorolása alapján választottam ki.
 \newline
@@ -323,7 +323,7 @@ Az eredmények a korábbi i-vektoros rendszerekhez képest a Deep Speaker 50\% c
 
 A SincNet (2018) is a korábban használt i-vektoros rendszerek helyett mutat be egy új CNN hálózatot. A CNN-ek előnye, hogy a korábban használt kézzel fabrikált jellemzők (pl. MFCC) helyett a hálózat maga tanulja meg a hang alacsony szintű reprezentációját nyers hullámformákból. Mivel a cikk a CNN-t kiegészíti hangszűrőkkel és a jelfeldolgozásban használatos fogalmakat használ, először ismertetem ezeket~\cite{sincnet}:
 \begin{itemize}
-	\item Beszéd frekvencia: Egy periodikus hullámforma esetében a frekvencia a periódusidő reciproka, azza megmondja, hogy egységnyi idő alatt hány periódus ment végbe. Az emberi hang esetében a komplex hullámforma Fourier analízissel felbontható trigonometrikus (periodikus) függvények összegére. A Fourier transzformáció segítségével az idő-amplitúdó doménből frekvencia-amplitúdót képzünk, így a frekvencia komplex jel esetén és értelmet nyer.
+	\item Beszéd frekvencia: Egy periodikus hullámforma esetében a frekvencia a periódusidő reciproka, azza megmondja, hogy egységnyi idő alatt hány periódus ment végbe. Az emberi hang esetében a komplex hullámforma Fourier analízissel felbontható trigonometrikus (periodikus) függvények összegére. A Fourier transzformáció segítségével az idő-amplitúdó doménből frekvencia-amplitúdót képzünk, így a frekvencia komplex jel esetén is értelmet nyer.
 	\item Sávszélesség: Hang esetében általánosan a legalacsonyabb és legmagasabb frekvencia közötti különbség.
 	\item Cutoff frekvencia: A hangszűrők legfontosabb paramétere. Például aluláteresztő szűrő esetében a cutoff fölötti frekvenciákat a szűrő tompítja, nem engedi át.
 	\item Band pass filter: Olyan szűrő, ami csak a cutoff frekvencia környezetében lévő frekvenciákat engedi át (egy alul -és felüláteresztő szűrő kombinációja).
@@ -344,7 +344,7 @@ A korábban használt kézzel fabrikált jellemzők, mint az MFCC vagy FBANK ese
 \ \\
 \newline
 A SincNetet a TIMIT (462 beszélő) és Librispeech (2484 beszélő) adatbázisokkal tanították.
-A beszédminták elejéről a szüneteket eltávolították, és LibriSpeech esetén azokat a mintákat, amelyek tartalmaztak legalább 125 ms hosszú szünetet, annak mentén feldarabolták. A TIMIT adatbázisnál egy beszélőtől 5 mintával tanítottak és 3 mintával teszteltek, míg LibriSpeechnél véletlenszerűen választottak 12-16 másodperces mintákkal tanítottak és 2-6 másodpercesekkel teszteltek.
+A beszédminták elejéről a szüneteket eltávolították, és LibriSpeech esetén azokat a mintákat, amelyek tartalmaztak legalább 125 ms hosszú szünetet, annak mentén feldarabolták. A TIMIT adatbázisnál egy beszélőtől 5 mintával tanítottak és 3 mintával teszteltek, míg LibriSpeechnél véletlenszerűen választott 12-16 másodperces mintákkal tanítottak és 2-6 másodpercesekkel teszteltek.
 \newline
 \begin{table}[!ht]
 	\begin{tabular}{*3l} \toprule
@@ -383,7 +383,7 @@ A \ref{fig:sincnet-identification}-es táblázat a CER (Classification Error Rat
 \end{table}
 \ \\
 \newline
-A SincNettel nem jellemző vektorokat képeztek és a köztük lévő távolságot használták a hasonlóság mérésére, hanem osztályozással használják. Ebben az esetben zárt-halmazú beszélőazonosításról beszélünk. Ez sokkal kevésbé flexibilis, mert új beszélő esetén mindig újra kell tanítani a hálózatot, de cserébe jobb teljesítményre képes. A \ref{fig:sincent-verification} ábrán egy d-vector nevű hangvektorokat képző neurális hálózatot hasonlítottak össze a SincNettel. Beszélőellenőrzés esetén a SincNet sokkal jobb EER-t ért el.
+A SincNettel nem jellemző vektorokat képeztek és a köztük lévő távolságot használták a hasonlóság mérésére, hanem osztályozással használják. Ebben az esetben zárt-halmazú beszélőazonosításról beszélünk. Ez sokkal kevésbé flexibilis, mert új beszélő esetén mindig újra kell tanítani a hálózatot, de cserébe jobb teljesítményre képes. A \ref{fig:sincnet-verification} ábrán egy d-vector nevű hangvektorokat képző neurális hálózatot hasonlítottak össze a SincNettel. Beszélőellenőrzés esetén a SincNet sokkal jobb EER-t ért el.
 \newpage
 \subsection{VoxCeleb2: Deep Speaker Recognition}
 
@@ -445,6 +445,18 @@ A teljes modell end-to-end tanítására a VoxCeleb2 adatbázist használták é
 \end{figure}
 \ \\
 A \ref{fig:frame-cnn-results} táblázat mutatja a verifikációval mért EER-eket az akkori legkorszerűbb rendszerekkel szemben. Az addigiaknál lényegesen jobb EER-t értek el ezzel a módszerrel.
+
+\section{A hangminták hossza}
+
+Az eddigi rendszerekre hagyatkozva elmondható, hogy körülbelül 1-15 másodperces mintákkal tanították a neurális hálózatokat. Ez függ a beszédadatbázisban lévő hangminták méretétől, az előfeldolgozástól, és az határozza meg, hogy hiperparaméter optimizáció során mi bizonyul a legjobb értéknek. Ez rendszerenként változó. A \ref{section:modern_speaker_recognition} fejezetben ismertetett rendszerek és a voicemap kísérletek (\ref{section:voicemap_expermiments} fejezet) a következő eredményeket mutatták:
+
+\begin{itemize}
+	\item Deep speaker: 1-5 másodperces hangmintákból képzett 20-dimenziós MFCC-t használtak tanításhoz.
+	\item LibriSpeech: 12-16 másodperces mintákkal tanítottak
+	\item VoxCeleb2: 3 másodperces mintákból képzett spektrogrammokat használtak.
+	\item Speaker Recognition in the Wild: Átlagosan 7-8 másodperces mintákat használnak (VoxCeleb2 adatbázis)
+	\item voicemap: 3 másodperces minta volt a legjobb optimizálás után.
+\end{itemize}
 
 \section{Mérési környezet}
 
@@ -621,8 +633,8 @@ Mivel a saját alkalmazásomban felhasználtam és átalakítottam a projekt egy
 röviden bemutatom a felépítését.
 
 \begin{itemize}
-	\item \emph{models.py}: A konvolúciós enkóder létrehozása és a sziámi hálózat építését végzi el.
-	\item \emph{librispeech.py}: Keras szekvencia osztály a librispeechből képzett tanítóadatok kezelésére. Fő paraméterei a következők:
+	\item \emph{models.py}: A konvolúciós enkóder létrehozását és a sziámi hálózat építését végzi el.
+	\item \emph{librispeech.py}: Keras szekvencia osztály Librispeech beszédadatbázisból származó hangminták tárolására, előfeldolgozására és generálására tanításhoz. Fő paraméterei a következők:
 	\begin{itemize}
 		\item \emph{subsets}: Mely LibriSpeech adathalmazokat tartalmazza.
 		\item \emph{seconds}: Az ennél rövidebb időtartamú hangmintákat figyelmen kívül hagyja.
@@ -634,9 +646,9 @@ röviden bemutatom a felépítését.
 	
 	\begin{itemize}
 		\item \emph{build\_verification\_batch}: A sziámi hálózat teszteléséhez generál olyan batchet, amelyben az ugyanattól és az eltérő beszélőktől származó hangmintapárok száma azonos (50\%-50\%). A batch egy eleme két hangmintából és egy címkéből áll, ami jelzi, hogy egyazon vagy más-más beszélőktől származnak.
-		\item \emph{build\_n\_shot\_task(k, n)}: Visszaad egy segédhalmazt $n$ mintával minden egyes $k$ beszélőtől és visszaad egy mintát, amiről a modellnek el kell döntenie, hogy melyik beszélőhöz tartozik.
+		\item \emph{build\_n\_shot\_task(k, n)}: Visszaad egy segédhalmazt $n$ mintával minden egyes $k$ beszélőhöz és visszaad egy mintát, amiről a modellnek el kell döntenie, hogy melyik beszélőhöz tartozik.
 	\end{itemize}
-	\item \emph{utils.py}: Fő feladata az adatok preprocesszálása és a \emph{n\_shot\_task\_evaluation} függvény által az \emph{n-shot k-way} feladat kiértékelése. A few-shot kiértékeléshez alábbi argumentumokat adhatjuk meg:
+	\item \emph{utils.py}: Fő feladata az adatok preprocesszálása és az \emph{n\_shot\_task\_evaluation} függvény által az \emph{n-shot k-way} feladat kiértékelése. A few-shot kiértékeléshez alábbi argumentumokat adhatjuk meg:
 	
 	\begin{itemize}
 		\item  \emph{model}: A tesztelendő modell.
@@ -667,7 +679,7 @@ rétegekből tevődnek össze.
 	\item BatchNormalization: Batchenként normalizálja az előző réteg kimeneteit úgy, hogy az átlag 0-hoz, a szórás 1-hez közelítsen. Regularizációra használják.
 	\item SpatialDropout1D: Sima dropout réteg esetén az egyes neuronokat valamekkora valószínűséggel figyelmen kívül hagyjuk. Például egy [[1, 2, 3], [2, 3, 1]] tömbnek a kimenete sima dropout esetén lehet [[1, 0, 3], [0, 3, 1]], itt teljesen függetlenek egymástól a kinullázások. Spatial dropout esetén az adott dimenzió mentén mindent kinullázunk. Például [[1, 0, 3], [2, 0, 1]]. Regularizációra használják.
 \end{itemize}
-
+\ \\
 Négy ilyen konvolúciós blokk követi egymást, majd további regularizáció: egy \emph{GlobalMaxPool1D} és egy \emph{Dense} réteg a hangvektor méretével.
 
 \begin{figure}[!ht]
@@ -676,9 +688,9 @@ Négy ilyen konvolúciós blokk követi egymást, majd további regularizáció:
 	\caption{A konvolóciós enkóder felépítése.}
 	\label{fig:conv_encoder}
 \end{figure}
-
+\ \\
 A sziámi hálózat alapja két enkóder hálózat, amelynek súlyai megosztottak, tehát úgy is tekinthetünk rá, hogy egy enkóder hálózatra két bemenetet adhatunk. A hangminták a hálózaton áthaladva jellemző vektorokká alakulnak. Ezt a részt a konvolúciós enkóder végzi. Ezután a két vektor közötti távolságmetrikát a sziámi hálózat kiszámolja. Ezen távolság alapján számolja ki a veszteséget és javítja a súlyokat.
-
+\ \\
 Az implementált távolságmetrikák a következők:
 
 \begin{itemize}
@@ -723,7 +735,7 @@ Minden epoch végén kiértékelés történik: 500 \emph{1-shot 5-way} feladat 
 Továbbá ha a kiértékelés során a pontosság nem nő, a \emph{ReduceLROnPlateau} csökkenti a tanulási rátát.
 
 
-\subsection{Kísérletek és optimalizálás}
+\subsection{Kísérletek és optimalizálás} \label{section:voicemap_expermiments}
 
 A repositoryban számos kísérlet található a legjobb teljesítmény elérésére. A \emph{wide\_vs\_tall} szkript leméri, hogy a modell hogyan teljesít különböző hosszúságú hangmintákkal tanítva. A mérés alatt \emph{1-shot 5-way} feladatokkal, azaz 5 különböző beszélőtől 1-1 beszédmintával validálta a modellt.
 
@@ -735,7 +747,8 @@ A repositoryban számos kísérlet található a legjobb teljesítmény elérés
 \end{figure}
 
 A \ref{fig:voicemap-wide-vs-tall} ábrán látható, hogy a hangminta méretét növelve a modell valóban jobban tanul, de a több adat miatt megnövekedik a tanítási idő és több memóriára van szükség. A grafikon mutatja, hogy 3 másodperc után a validáció stagnálni kezd, ezért az erőforrásokat és a tanítási időt figyelembe véve ez tűnik a legjobb választásnak.
-
+\newline
+\newline
 A \emph{grid\_search\_siamese\_network} szkript hiperparaméter optimizációt végez a sziámi hálózaton a filterek számát, a hangmintákból képzett vektorok hosszát és a dropoutot vizsgálva. A talált legjobb paraméterek:
 
 \begin{itemize}
@@ -743,7 +756,7 @@ A \emph{grid\_search\_siamese\_network} szkript hiperparaméter optimizációt v
 	\item jellemző vektor dimenzió: 64
 	\item dropout: nincs
 \end{itemize}
-
+\ \\
 A \emph{k\_way\_accuracy} kísérlet a hiperparaméter optimalizált modell teljesítményét méri le különböző \emph{n-shot k-way} feladatokkal. A pontosságot a \ref{fig:voicemap-n-shot-k-way} ábra mutatja.
 
 \begin{figure}[!ht]
@@ -752,7 +765,7 @@ A \emph{k\_way\_accuracy} kísérlet a hiperparaméter optimalizált modell telj
 	\caption{Voicemap: n-shot k-way pontosság.}
 	\label{fig:voicemap-n-shot-k-way}
 \end{figure}
-
+\ \\
 \emph{1-shot k-way} feladatok esetén a sziámi hálózat átlagosan jobban teljesít sima klasszifikációsnál, de \emph{5-shot k-way} feladatok esetén már az utóbbi kerül fölénybe. Ez valószínűleg annak köszönhető, hogy 5 hangminta - beszélő párból a sima osztályozó hálózat már jobban meg tudta tanulni a beszélőket a sziáminál.
 
 
@@ -764,7 +777,7 @@ A \emph{k\_way\_accuracy} kísérlet a hiperparaméter optimalizált modell telj
 \end{figure}
 
 \newpage
-
+\ \\
 Lemértem sziámi hálózat esetén a contrastive loss és bináris keresztentrópia veszteségfüggvények közötti különbséget. Mindkét modellt az optimizált hiperparaméterekkel 50 epochon keresztül tanítottam.
 
 \begin{figure}[!ht]
@@ -773,7 +786,7 @@ Lemértem sziámi hálózat esetén a contrastive loss és bináris keresztentr�
 	\caption{Voicemap: n-shot k-way pontosság.}
 	\label{fig:contrastive_vs_bce}
 \end{figure}
-
+\ \\
 A \ref{fig:contrastive_vs_bce} grafikon mutatja, hogy a \emph{1-shot 5-way} pontosság a 20. epochnál kezd 90\% fele konvergálni. A maximális pontosság contrastive lossnál a 44. epochnál 90,8\%, míg bináris keresztentrópia esetén a 47. epochnál 92,6\%.
 
 \newpage
@@ -794,7 +807,7 @@ Az alapja a konvolúciós enkóder. Ehhez csatlakozik három bemenet, a kimenet�
 	\caption{Triplet hálózat.}
 	\label{fig:triplet-network}
 \end{figure}
-
+\ \\
 Tanításhoz a LibriSpeech adatbázist használatam. Ehhez módosítottam a \emph{LibriSpeechDataset} osztályt úgy, hogy képes legyen tripletekből álló batchek generálására is.
 \newline
 \newline
@@ -806,8 +819,8 @@ Az \emph{utils.py}-ben implementáltam magát a \emph{triplet loss} veszteségf�
 	\caption{Triplet lossal tanítás eredményei.}
 	\label{fig:triplet-loss-chart}
 \end{figure}
-
+\ \\
 A tanítás során minden batch végén 1-shot 5-way kiértékelés történik, azaz 5 beszélőtől egyelemű segédhalmazokkal próbálja a hálózat megtippelni, hogy melyik beszélőhöz tartozik a kérdéses hangminta.
 \newline
 \newline
-A grafikonon azt mutatja, hogy az egyes epochok szerint hogyan változik a veszteség és a 1-shot 5-way pontosság. Látható, hogy a veszteség stagnálva, de csökken, ennek ellenére a validációs pontosság folyamatosan 0 és 1 között változik. A 17. és 24 epochnál megközelíti az 1-et, majd tovább romlik, a tanítás nem volt sikeres.
+A \ref{fig:triplet-loss-chart} grafikon azt mutatja, hogy az egyes epochok szerint hogyan változik a veszteség és a 1-shot 5-way pontosság. Látható, hogy a veszteség stagnálva, de csökken, ennek ellenére a validációs pontosság folyamatosan 0 és 1 között változik. A 17. és 24 epochnál megközelíti az 1-et, majd tovább romlik. A hálózat tanítása nem volt sikeres.

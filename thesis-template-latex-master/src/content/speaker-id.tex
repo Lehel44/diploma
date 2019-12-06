@@ -664,7 +664,7 @@ röviden bemutatom a felépítését.
 
 \subsection{Az implementált modellek}
 
-A projekt két modellt vizsgál; egy sziámi neurális hálózatot és egy sima konvolúciósat klasszifikációval. Mindkét hálózat alapja alapja egy konvolúciós enkóder, amely a nyers hangmintákból kinyeri a jellemzőket és hangvektorokat állít elő belőlük. Az enkóder hálózat a több egymást követő konvolúciós blokk áll. Egy konvolúciós blokk felépítése a \ref{fig:conv_encoder_block} ábrán látható. Ezek egy konvolúciós rétegből és regularizációs
+A projekt két modellt vizsgál; egy sziámi neurális hálózatot (a konvolúciós sziámi hálózat részletes leírása a \ref{section:siamese_conv} fejezetben található) és egy sima konvolúciósat klasszifikációval. Mindkét hálózat alapja alapja egy konvolúciós enkóder, amely a nyers hangmintákból kinyeri a jellemzőket és hangvektorokat állít elő belőlük. Az enkóder hálózat a több egymást követő konvolúciós blokk áll. Egy konvolúciós blokk felépítése a \ref{fig:conv_encoder_block} ábrán látható. Ezek egy konvolúciós rétegből és regularizációs
 rétegekből tevődnek össze.
 
 \begin{figure}[!ht]
@@ -737,7 +737,7 @@ Továbbá ha a kiértékelés során a pontosság nem nő, a \emph{ReduceLROnPla
 
 \subsection{Kísérletek és optimalizálás} \label{section:voicemap_expermiments}
 
-A repositoryban számos kísérlet található a legjobb teljesítmény elérésére. A \emph{wide\_vs\_tall} szkript leméri, hogy a modell hogyan teljesít különböző hosszúságú hangmintákkal tanítva. A mérés alatt \emph{1-shot 5-way} feladatokkal, azaz 5 különböző beszélőtől 1-1 beszédmintával validálta a modellt.
+A repositoryban számos kísérlet található a legjobb teljesítmény elérésére. A \emph{wide\_vs\_tall} szkript leméri, hogy a modell hogyan teljesít különböző hosszúságú hangmintákkal tanítva. A mérés alatt \emph{1-shot 5-way} feladatokkal, azaz 5 különböző beszélőtől 1-1 beszédmintával validálta a modellt~\cite{voicemap_medium}.
 
 \begin{figure}[!ht]
 	\centering
@@ -793,7 +793,55 @@ A \ref{fig:contrastive_vs_bce} grafikon mutatja, hogy a \emph{1-shot 5-way} pont
 
 \subsection{Saját kísérlet: Triplet loss}
 
-Létrehoztam egy bemenetként tripleteket fogadó neurális hálózatot \emph{triplet loss} veszteségfüggvénnyel. Egy bemenet egy olyan hangminta hármas (triplet), ami két azonos és egy különbözőtől beszélőtől tartalmaz hangmintát. 
+
+A sziámi hálózatoknak egy ismert költségfüggvénye a \emph{triplet loss} függvény. Ezt a \emph{gradient descent} módszerrel optimizálva tanítjuk a hálózatot. A triplet loss három bemenetet igényel, amelyek jelen példában a hangokból képzett jellemző vektorok. Az egyik egy rögzített hang vektora, ez az ún. \emph{anchor}. A másik kettő pedig egy pozitív és egy negatív minta. A pozitív ugyanattól a beszéltőtől származik mint az \emph{anchor} vektor, a másik különbözőtől~\cite{triplet_semi_hard}.
+\begin{equation}\label{eq:4}
+\mathcal{L}_{triplet}(A, P, N) = \max(d(A, P) - d(A, N) + m, 0)
+\end{equation}
+\ \\
+A $d$ a távolságfüggvény, ami lehet például euklideszi távolság. A \emph{triplet loss} veszi az anchor és a pozitív meg az anchor és a negatív minta távolságainak különbségét, majd ezt eltolja az $m$ küszöbértékkel. Ha az előbbi pozitív ezt veszi eredményül, egyébként nullát.
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=100mm, keepaspectratio]{figures/triplet-loss.png}
+	\caption{A triplet loss függvény csökkenti a távolságot a hasonló és növeli a különböző minták között.}
+	\label{fig:triplet-loss}
+\end{figure}
+\ \\
+Akkor jó a vektorok elhelyezkedése a metrikus térben, ha a hasonlók között a távolság kicsi, a különbözők között pedig nagy. Azt szeretnénk elérni, hogy
+$d(A, P) \le d(A, N)$ fenn álljon. Átrendezve a $d(A, P) - d(A, N) \le 0$ egyenletet kapjuk. Ezt kielégíti a $d(A, P) = 0$, $d(A, N) = 0$ megoldás. A másik triviális megoldás, ha a pozitív és negatív minta kódolása ugyanaz lenne, ekkor ugyanis $d(A, P) = d(A, N)$ így $d(A, P) - d(A, N) = 0$. Szeretnénk, ha a neurális hálózat nem nullvektorokkal vagy azonos vektorokkal kódolná az összes képet, ezért hozzáadunk egy $m$ küszöbértéket az egyenlethez.
+
+\begin{equation}\label{eq:5}
+\begin{aligned}
+d(A, P) + m \le d(A, N) \\
+d(A, P) - d(A, N) + m \le 0
+\end{aligned}
+\end{equation}
+\ \\
+Ideális esetben a $d(A, P) - d(A, N) + m$ negatív, ilyenkor a veszteség 0. Ha nem így van, a triplet loss ezt a veszteséget adja vissza. A költségfüggvény a tanítóhalmazban lévő tripletekre alkalmazott triplet lossok összege. Ezt minimalizálva a \ref{fig:triplet-loss} ábrán látható távolságok csökkentése, növelése történik.
+\newline
+\newline
+A tripletek kiválasztására többféle módszer létezik. A legegyszerűbb megoldás
+-- amit én is használtam -- a véletlenszerű kiválasztás. Emelett a tripleteket három kategóriába sorolhatjuk~\cite{triplet_semi_hard}\cite{triplet_github}. Ezt a \ref{fig:triplet-type} ábra szemlélteti:
+\begin{itemize}
+	\item Könnyű (negatív) triplet: A 0 veszteségű tripletek, mivel $d(A, P) + m \le d(A, N)$.
+	\item Nehéz (negatív) tripletek: A negatív közelebb van az anchorhoz mint a poztiív: $d(A, N) \le d(A, P)$
+	\item Félnehéz (negatív) tripletek: Olyan tripletek, ahol a negatív nincs közelebb az anchorhoz mint a pozitív, de mégis nagyobb a veszteség nullánál: $d(A, P) \le d(A, N) \le d(A, P) + m$.
+\end{itemize}
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=120mm, keepaspectratio]{figures/triplet_type.png}
+	\caption{A tripletek három típusa.}
+	\label{fig:triplet-type}
+\end{figure}
+
+\ \\
+Nehéz tripletek bányászása egy külön feladat és léteznek módszerek ún. offline (tanítás előtti) és online (tanítás közbeni) generálásra. Előnye, hogy gyorsabban konvergál a hálózat a veszteség minimuma felé. Ugyanakkor a FaceNet megjegyzi, hogy nehéz tripletekkel való tanítás az elején rossz lokális minimumhoz vezethet, ezért a félnehéz tripleteket ajánlja.
+
+\subsubsection{Voicemap implementáció}
+
+Létrehoztam egy bemenetként tripleteket fogadó neurális hálózatot \emph{triplet loss} veszteségfüggvénnyel (a triplet loss veszteségfüggvény részletes leírása a \ref{section:siamese_conv} fejezetben található). Egy bemenet egy olyan hangminta hármas (triplet), ami két azonos és egy különbözőtől beszélőtől tartalmaz hangmintát. 
 \newline
 \newline
 A két azonos minta közül az egyik lesz az \emph{anchor} érték. Ehhez mérten számoljuk ki a pozitív (azonos beszélőtől származó) és negatív (különböző beszélőtől származó) távolságokat. 
@@ -808,7 +856,7 @@ Az alapja a konvolúciós enkóder. Ehhez csatlakozik három bemenet, a kimenet�
 	\label{fig:triplet-network}
 \end{figure}
 \ \\
-Tanításhoz a LibriSpeech adatbázist használatam. Ehhez módosítottam a \emph{LibriSpeechDataset} osztályt úgy, hogy képes legyen tripletekből álló batchek generálására is.
+Tanításhoz a LibriSpeech adatbázist használtam. Ehhez módosítottam a \emph{LibriSpeechDataset} osztályt úgy, hogy képes legyen tripletekből álló batchek generálására is.
 \newline
 \newline
 Az \emph{utils.py}-ben implementáltam magát a \emph{triplet loss} veszteségfüggvényt, módosítottam a BatchPreProcessor wrapper osztályt, hogy egységesen kezelje a triplet alakú tanítóadatokat a sziámi és sima konvolúciós bemenetekkel együtt, majd kiegészítettem az \emph{n\_shot\_task\_evaluation} függvényt úgy, hogy képes legyen \emph{k-way n-shot} feladat kiértékelést tripleteken is elvégezni.
@@ -823,4 +871,4 @@ Az \emph{utils.py}-ben implementáltam magát a \emph{triplet loss} veszteségf�
 A tanítás során minden batch végén 1-shot 5-way kiértékelés történik, azaz 5 beszélőtől egyelemű segédhalmazokkal próbálja a hálózat megtippelni, hogy melyik beszélőhöz tartozik a kérdéses hangminta.
 \newline
 \newline
-A \ref{fig:triplet-loss-chart} grafikon azt mutatja, hogy az egyes epochok szerint hogyan változik a veszteség és a 1-shot 5-way pontosság. Látható, hogy a veszteség stagnálva, de csökken, ennek ellenére a validációs pontosság folyamatosan 0 és 1 között változik. A 17. és 24 epochnál megközelíti az 1-et, majd tovább romlik. A hálózat tanítása nem volt sikeres.
+A \ref{fig:triplet-loss-chart} grafikon azt mutatja, hogy az egyes epochok szerint hogyan változik a veszteség és a 1-shot 5-way pontosság. Látható, hogy a veszteség stagnálva, de csökken, ennek ellenére a validációs pontosság folyamatosan 0 és 1 között változik. A 17. és 24 epochnál megközelíti az 1-et, majd tovább romlik. A pontosság és a veszteség nem lassan, hanem egyáltalán nem konvergál, ezért feltételezhető, hogy nem a véletlenszerű tripletek kiválasztása a probléma. A tanítás nem volt sikeres.

@@ -3,15 +3,17 @@
 %----------------------------------------------------------------------------
 
 A következő fejezetben bemutatom egy általam a beszélőfelismerés szemléltetésére készített android alkalmazás fő elemeit és működését, a kapcsolódó technológiákat és implementációs részleteket. Az alkalmazásban konkrét beszélőfelismerésre készített neurális hálózatokat használok fel. A cél nem egy új beszélőfelismerő modell készítése volt, hanem az eddigiek felhasználásával egy működő alkalmazás létrehozása.
-
-Az alkalmazás kliens-szerver architektúrájú lesz. Az android kliens segítségével a felhasználó regisztrálhat a rendszerbe névvel és hanggal, majd az azonosítás opció megnyomásával hangmintát adva az alkalmazás eldönti, hogy regisztrálva van-e, és ha igen, akkor visszaadja az illető nevét.
+\newline
+\newline
+Az alkalmazás kliens-szerver architektúrájú. Az android kliens segítségével a felhasználó regisztrálhat a rendszerbe névvel és hanggal, majd az azonosítás opció megnyomásával hangmintát adva az alkalmazás eldönti, hogy regisztrálva van-e, és ha igen, akkor visszaadja az illető nevét.
 
 \section{Modell predikció a felhőben vagy lokálisan?} \label{cloud_or_local}
 
 
 A szervernek tárolnia kell a felhasználóktól származó hangmintákat és a felhasználó azonosítás folyamata közben összehasonlítani őket. Az összehasonlítást egy sziámi neurális hálózat végzi. Az alkalmazás felépítését tekintve a legfontosabb kérdés, hogy ezt az összehasonlítást központilag egy felhőben a szerver, vagy a kliens oldali alkalmazás végezze. Mivel a modell végzi a predikciót, ettől a döntéstől függően azt a szerveren vagy a kliens eszközökön kell tárolni. Mindkét architektúrának vannak előnyei és hátrányai is.
-
-Mivel esetünkben az alkalmazás kész, előre tanított modelleket használ, nincs szükség a modellek tanítására. Ennek ellenére ha a jövőben saját modellt szeretnénk használni felmerül a kérdés, hogy hol tanítsuk azt.
+\newline
+\newline
+Mivel esetünkben az alkalmazás kész, előre tanított modelleket használ, nincs szükség a modellek tanítására. Ennek ellenére ha a jövőben saját modellt szeretnénk használni felmerül a kérdés, hogy hol tanítsuk azt~\cite{cloud_or_local}.
 
 \begin{itemize}
 	\item A felhőben hosztolt gépi tanulási szolgáltatások általában saját modelleket használnak. Mi a saját adatainkat átadjuk és a szolgáltatás gondoskodik a modell tanításáról. Ezután a predikciót egy API-n keresztül végezhetjük el. Figyelni kell arra, hogy ebben az esetben nem mindig miénk a modell. Ha nincs lehetőség tanítás után a modell letöltésére, akkor a predikció mindenképp a felhőben marad. Másrészről a magas szintű szolgáltatások kezelése könnyebb, nem kell érteni a neurális hálózatok tanításához, de nem elég flexibilisek. Általában nem változtathatunk a modellen és az API-n sem.
@@ -20,7 +22,7 @@ Mivel esetünkben az alkalmazás kész, előre tanított modelleket használ, ni
 	
 	\item Lokálisan is taníthatjuk a modellt. Ez főleg akkor éri meg, ha van elég erőforrásunk hozzá vagy a modell mérete nem indokolja több erőforrás használatát. Nagyobb modellek esetében a tanítási idő hosszú. Az árakat és az időt mérlegelve dönteni kell, hogy a lehetőségek közül melyiket indokolt választani.
 \end{itemize}
-
+\ \\
 Ha már rendelkezünk egy működő modellel, akkor el kell döntenünk, hogy a predikciót a felhőben vagy lokálisan az eszközön végezzük.
 
 \begin{itemize}
@@ -30,7 +32,7 @@ Ha már rendelkezünk egy működő modellel, akkor el kell döntenünk, hogy a 
 	\item Az alkalmazás architektúráját tekintve ha a modell és a predikció a szerveren történik, bármikor frissíthetjük, finomhangolhatjuk a modellt és ehhez nem kell a felhasználóknak frissítéseket letölteniük. Nincs szükség szinkronizációra. Az alkalmazás elosztott, elkülönült backend és frontend részekből áll, amelyek egy interfészen keresztül kommunikálnak, így ezek a komponensek lecserélhetők, csak az interfészt kell implementálniuk (API).
 	\item Felhőbeli erőforrásokat használva az árat is figyelembe kell venni. Minél több felhasználó használ egy alkalmazást és amennyiben a számítás központilag a felhőben történik, annál több erőforrásra van szükség. Nagy előnye a készüléken végzett predikciónak, hogy jól skálázódik. Több felhasználó esetén nincs szükség több erőforrásra.
 \end{itemize}
-
+\ \\
 Jelen alkalmazás egy beszélőfelismerő szoftvert szemléltet, amelyet a valóságban vállalatok üzemeltetnek beléptető kapuval biometrikus azonosításra használva. Központi szerverre szükség van a regisztrált felhasználók adatainak biztonságos tárolása és a könnyű szinkronizáció miatt. Ha feltesszük, hogy a beléptető rendszert nem több mint tízezer ember azonosítására használják és a belépés szekvenciálisan történik, óriási erőforrásokat sem kell használni, mert a szerver egy időben legfeljebb a beléptető kapuk száma szerinti számítást kell végezzen, ami korlátos. Ezeket figyelembe véve úgy döntöttem, hogy a modell tárolása és a predikció szerveren fog történni.
 
 \section{Alkalmazás architektúra és általános működés}
@@ -43,7 +45,7 @@ Mivel az alkalmazás tárolja a regisztrált felhasználók hangmintáit és a m
 	\caption{Beszélőfelismerő alkalmazás: Regisztrációs fázis.}
 	\label{fig:app-register}
 \end{figure}
-
+\ \\
 A \ref{fig:app-register} ábrán látható kliens a felhőben futó szerverrel egy REST API-n keresztül kommunikál. A kliens segítségével a felhasználó regisztrál a rendszerbe, ezután azonosíthatja magát. A regisztrációs fázis működése a következő:
 
 \begin{enumerate}
@@ -51,7 +53,7 @@ A \ref{fig:app-register} ábrán látható kliens a felhőben futó szerverrel e
 	\item A kliens a hangmintát és a nevet elküldi a szervernek a REST API-n keresztül.
 	\item A szerver előfeldolgozza a hangfájlt, a modell segítségével hangvektort készít belőle és menti az adatbázisba. 
 \end{enumerate}
-
+\ \\
 Miután a felhasználók regisztráltak, az alkalmazás a hangjuk alapján azonosítani tudja őket. Az azonosítási fázis lépéseit a \ref{fig:app-identify} ábra mutatja.
 
 \begin{figure}[!ht]
@@ -72,7 +74,7 @@ Miután a felhasználók regisztráltak, az alkalmazás a hangjuk alapján azono
 
 Azt is figyelembe kell venni, hogy azonosításkor a szerver a minimális vektortávolsághoz tartozó névvel tér vissza. Ez azt jelenti, hogy ha egy regisztrált felhasználó van a rendszerben,
 bárki képes lenne belépni a regisztrált felhasználó nevében, hiszen csak egy távolság van, ami minimális. Ennek elkerülésére további biztonsági funkciókkal kell kiegészíteni az alkalmazást;
-
+\ \\
 Meg kell határozni egy biztonsági küszöböt a vektorok távolságára - azaz ha nem elég hasonlóak, egyéb autentikációs mechanizmusra lesz szükség. Ennek megfelelően a szervert
 kiegészítettem egy biztonsági küszöbbel, amit ha azonosításkor a vektortávolság nem ér el, jelszó alapú azonosítást kér a felhasználótól. A biztonsági funkcióval kiegészített
 működés abban az esetben, ha a biztonsági küszöböt nem éri el az alkalmazás a \ref{fig:app-with-security} ábrán látható. A regisztrációs fázis annyiban tér el az előzőtől, hogy a felhasználó egy jelszót is megad a neve mellett, amit
@@ -101,7 +103,7 @@ a vektorok között. A jelenlegi implementáció a következő hasonlósági pon
 	\item Euklideszi-távolság: $$d_{euc}(v_1, v_2) = \left (\sum_{i=1}^{n} x_i - y_i \right) ^\frac{1}{2}$$
 	\item Koszinusz-távolság: $$d_{cos}(v_1, v_2) = \frac{v_1 \cdot v_2}{\left\lVert v_1 \right\rVert \cdot \left\lVert v_2 \right\rVert} = \frac{\sum_{i=1}^{n} x_i \cdot y_i}{\sqrt{\sum_{i=1}^{n} x_i^2} \cdot \sqrt{\sum_{i=1}^{n} y_i^2}}$$
 \end{itemize}
-
+\ \\
 Konfigurálható továbbá a biztonsági küszöbszám is. Ez azon értéke, melyet
 ha a hasonlósági pontszám nem ér el, a szerver jelszó alapú autentikációs kérést küld a kliens fele.
 
@@ -136,9 +138,11 @@ Az Android Studios projekt főbb elemei a következők:
 \subsubsection{Engedélyek}
 
 Bizonyos műveletek elvégzéséhez az Android operációs rendszeren engedélyek szükségesek. Az engedélyek a művelet típusától függően \emph{normál} vagy \emph{veszélyes} osztályba tartoznak. Ha az alkalmazás olyan műveletet akar végrehajtani, amihez engedély szükséges, azt deklarálni kell az android projekt manifest fájljában.
-
+\newline
+\newline
 A \emph{normál} engedélyeket az operációs rendszer ezután automatikusan biztosítja, míg a \emph{veszélyesekhez} a felhasználó engedélyét kéri. Korábbi android verziókban az engedélyek megadási az alkalmazás telepítésekor történt, de később ez megváltozott. A minimum Android 6.0-át (23-as API szint) használó készülékeken a felhasználó már nem telepítéskor, hanem futási időben kell megadja az engedélyeket. Egy felugró ablak listázza, hogy az alkalmazás milyen engedélyeket kér, ezután választhat, hogy melyeket adja meg neki.
-
+\newline
+\newline
 A beszélőfelismerő alkalmazás a következő engedélyeket használja:
 
 \begin{itemize}
@@ -151,9 +155,11 @@ A beszélőfelismerő alkalmazás a következő engedélyeket használja:
 \subsubsection{Tárhely}
 
 Az alkalmazás a felhasználótól vett hangmintát \emph{wav} formátumban tárolja el. A \emph{wav} egy tömörítetlen audioformátum és mivel később hangmintából jellemzőkinyerés történik, így nem veszíthetünk információt a jellemzőkről a tömörítés miatt. Később bemutatom, hogy a tömörített audioállományok milyen hatással vannak a modell teljesítményére.
-
+\newline
+\newline
 Az Android beépített \emph{MediaRecorder} osztálya a \emph{wav} formátumot nem támogatja és nincs erre készült más beépített Java osztály sem, ezért egy erre készített kódot használtam fel Selvaline blogjáról. Selvaline \emph{WavRecorder} osztálya az általunk beállított paraméterekkel (csatorna, mintavételi frekvencia, stb.) felveszi a hangot és egy \emph{wav} fájlban tárolja azt.
-
+\newline
+\newline
 Az Android operációs rendszeren használhatunk külső és belső tárhelyet. A belső tárhely előnye, hogy a fájlokhoz csak az alkalmazás fér hozzá és annak eltávolításakor a hozzá kapcsolódó fájlok is törlődnek. A külső tárhely előnye esetünkben, hogy könnyű mountolni. Ha a készüléket USB-vel számítógéphez csatlakoztatjuk, a külső tárhelyen lévő fájlokat böngészhetjük. Ez a hangfájl tesztelése miatt célszerű választás volt. 
 
 
@@ -169,7 +175,7 @@ Az Android operációs rendszeren használhatunk külső és belső tárhelyet. 
 	\caption{Menü.}
 	\label{fig:app-main-screen}
 \end{figure}
-
+\ \\
 A regisztrációs felületen megadjuk a nevet, majd a \emph{Record} gombra kattintva három másodperc múlva elindul a hangfelvétel, ami négy másodpercen keresztül tart. A felületen megjelenő információ folyamatosan tájékoztatja a felhasználót a hangfelvétel folyamatáról.
 
 \begin{figure}[!ht]
@@ -180,7 +186,7 @@ A regisztrációs felületen megadjuk a nevet, majd a \emph{Record} gombra katti
 	\caption{Felhasználói felület regisztrációhoz.}
 	\label{fig:app-register-screen-1}
 \end{figure}
-
+\ \\
 A zöld fejlécen a vissza nyílra kattintva visszajutunk a főmenübe. Ezt az opciót a manifest fájlban a \emph{parentActivityName} tag megadásával érhetjük el.
 
 \begin{figure}[!ht]
@@ -203,15 +209,20 @@ A főmenüből az azonosító felületre lépve az \emph{Identify} gombra kattin
 \end{figure}
 
 A \emph{MainActivity} osztály tartozik a főmenühöz. Amikor a főmenübe lépünk, az \emph{onCreate} metódus hívódik meg, amely ellenőrzi, hogy az alkalmazásnak megvannak-e a szükséges engedélyei a \emph{hasPermission} segédmetódus által. Ha igen akkor nem tesz semmit, egyébként a felhasználótól az összes engedély megadását kéri.
-
+\newline
+\newline
 Az \emph{enroll} metódus a felületen az \emph{Enroll} gombhoz, az \emph{identify} az \emph{Identify} gombhoz tartozik. Mindkét függvény létrehoz egy-egy \emph{Intent}-et ami a hivatalos definíció szerint egy elvégzendő művelet absztrakt leírása. Az \emph{Intent} valójában arra jó, hogy egy felületről egy másik felületre lépjünk. A kiinduló felületen egy gombra kattintva (pl. \emph{Enroll}), a gombhoz tartozó listener metódus (\emph{enroll()}) hívódik meg, ami létrehoz egy \emph{Intentet} paraméterként átadva az elérni kívánt felülethez tartozó \emph{Activity} osztályt (\emph{EnrollActivity}). Ezután az \emph{Intentet} elindítva átlépünk a felületre.
-
+\newline
+\newline
 A regisztrációs felületre lépve az \emph{onCreate} metódus meghívásakor az \emph{EnrollActivity} példányosít egy \emph{WavRecorder} objektumot a fájl elérési útjával paraméterezve. A \emph{record} metódus visszaszámlál, kiírja a felhasználónak az időzített üzeneteket, és elindítja majd megállítja a \emph{WavRecordert}.
-
+\newline
+\newline
 Az időzítést az ajánlás szerint a \emph{Handler} osztály segítségével végeztem. Ennek előnye, hogy az időzített feladatokat egy háttérszálon futtatja, így nem blokkol. Így nem történhet meg, hogy egy hosszabb feladat elvégzése miatt a felületen nem kattinthatunk amíg az nincs kész.
-
+\newline
+\newline
 Az \emph{IdentifyActivity} osztály nagyon hasonlóan működik. A különbség, hogy a \emph{EnrollActivity}-hez képest nem küld nevet és más címre küldi a hangfájlt.
-
+\newline
+\newline
 Mindkét osztály a \emph{UploadAudio} objektumot használ a fájl szerverhez való elküldéséhez. Az \emph{UploadAudio} egy \emph{OkHttpClient} http klienst használ és \emph{multipart/form} Http POST kérést küld a szerver felé a hangfájllal ill. regisztrációkor a névvel. Ezután egy callback metódussal várja a szerver válaszát, amit az azonosító felületre továbbít.
 
 \subsection{Szerver}
@@ -228,9 +239,10 @@ A Flask két fő BSD-licencelt komponensre épül:
 	\item Werkzeug: A Werkzeug egy Python toolkit WSGI alkalmazásokhoz. Keretrendszereket lehet építeni rá és többféle Python verziót támogat. A WSGI egy hívási konvenció Pythonban írt webalkalmazásokhoz történő kérésekre.
 	\item Jinja: Web template engine Python alkalmazásokhoz.
 \end{itemize}
-
+\ \\
 A Flask előnye, hogy nagyon gyorsan és könnyedén lehet vele REST API-t készíteni és elindítani egy webalkalamzást. Nincs szükség más könyvtárakra, toolokra hozzá.
-
+\newline
+\newline
 Képes egyszerre több kérést is kezelni. Külön sessionökből érkező kérések külön szálakon futnak, így a keretrendszer a szálkezelést is megoldja helyettünk. A következő fontosabb funkciókat biztosítja:
 
 \begin{itemize}
@@ -394,9 +406,10 @@ Az Anaconda egy nyílt forráskódú Python és R disztribúció, amely több mi
 	\caption{Flask szerver: Osztálydiagram.}
 	\label{fig:anaconda-overview}
 \end{figure}
-
+\ \\
 Támogatja a gépi tanulást, tartalmazza a fontos gépi tanulási csomagokat (Keras, Tensorflow, Pytorch stb.), jupyter nootebookot. A virtuális környezetkezelővel a projekteknek külön virtuális környezetet hozhatunk létre. Ez fontos a verziók ütközésének elkerülése végett; Ha egy adott projektet Python 2.7-et használ, egy másik pedig Python 3.6-ot vagy ugyanolyan de eltérő verziójú programcsomagokat, akkor érdemes külön környezetet létrehozni nekik. A környezetek között a parancssorban navigálhatunk, csomagokat telepíthetünk rajtuk.
-
+\newline
+\newline
 Az Anaconda Cloud további csomagokat, környezeteket, publikus és privát notebookokat tartalmaz. Ide feltölthetünk sajátot, illetve kereshetünk, telepíthetünk közülük csomagokat, környezeteket a saját gépünkre, környezetünkre.
 
 \subsubsection{JetBrains PyCharm}

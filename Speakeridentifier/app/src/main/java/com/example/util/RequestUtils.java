@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.example.speakeridentifier.EnrollActivity;
 import com.example.speakeridentifier.LoginActivity;
+import com.example.speakeridentifier.ResultActivity;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -32,7 +33,7 @@ import okhttp3.Response;
 public final class RequestUtils {
 
     private static final MediaType MEDIA_TYPE_WAV = MediaType.parse("audio/wave");
-    private static final String FLASK_SERVER = "http://54.81.77.193:5000/";
+    private static final String FLASK_SERVER = "http://104.248.130.20:5000/";
     private Context context;
 
     public RequestUtils(Context context) {
@@ -68,13 +69,18 @@ public final class RequestUtils {
 
             @Override
             public void onResponse(Call call, final Response response) throws IOException {
-//                if (!response.isSuccessful()) {
-//                    throw new IOException("Unexpected code " + response);
-//                }
                 if (response.code() == 403) {
                     Intent intent = new Intent(context, LoginActivity.class)
                             .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     intent.putExtra("user_id", response.header("user_id"));
+                    intent.putExtra("distance", response.header("distance"));
+                    context.startActivity(intent);
+                } else if (response.code() == 202) {
+                    Intent intent = new Intent(context, ResultActivity.class)
+                            .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    intent.putExtra("user_id", response.header("user_id"));
+                    intent.putExtra("distance", response.header("distance"));
+                    intent.putExtra("authenticated", response.header("true"));
                     context.startActivity(intent);
                 }
                 String responseList = response.body().string();

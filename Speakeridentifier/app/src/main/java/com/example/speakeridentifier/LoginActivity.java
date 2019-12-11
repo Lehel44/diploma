@@ -1,6 +1,7 @@
 package com.example.speakeridentifier;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -30,7 +31,7 @@ import okhttp3.Response;
 
 public class LoginActivity extends AppCompatActivity {
 
-    private static final String BASE_URL = "http://54.81.77.193:5000/";
+    private static final String BASE_URL = "http://104.248.130.20:5000/";
     private static final String ROUTE = "authenticate";
 
     private EditText password;
@@ -48,9 +49,11 @@ public class LoginActivity extends AppCompatActivity {
 
     public void checkPassword(View view) {
         final String userId = getIntent().getStringExtra("user_id");
+        final String distance = getIntent().getStringExtra("distance");
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
                 .addFormDataPart("user_id", userId)
+                .addFormDataPart("distance", distance)
                 .addFormDataPart("password", password.getText().toString())
                 .build();
 
@@ -66,21 +69,6 @@ public class LoginActivity extends AppCompatActivity {
                 .writeTimeout(1, TimeUnit.HOURS)
                 .build();
 
-
-
-//        final Handler handler = new Handler();
-
-//        final Runnable textUpdate = new Runnable() {
-//            public void run() {
-//                Toast.makeText(getApplicationContext(), "safddsa", Toast.LENGTH_LONG).show();
-//                userIdView.setText(userId);
-//                userNameView.setText(userName);
-//                userIdView.setVisibility(View.VISIBLE);
-//                userNameView.setVisibility(View.VISIBLE);
-//            }
-//
-//        };
-
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -89,16 +77,27 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onResponse(Call call, final Response response) throws IOException {
-                if (!response.isSuccessful()) {
-                    throw new IOException("Unexpected code " + response);
+
+                //String responseBody = response.body().string();
+                //Log.i("OKHTTP3", responseBody);
+
+                //String userName = getStringByKey(responseBody, "user_name");
+
+                //backgroundThreadUpdateTexts(getApplicationContext(), userIdView, userNameView, userId, userName);
+                if (response.code() == 202) {
+                    Intent intent = new Intent(getApplicationContext(), ResultActivity.class);
+                    intent.putExtra("user_name", response.header("user_name"));
+                    intent.putExtra("distance", response.header("distance"));
+                    intent.putExtra("authenticated", "true");
+                    startActivity(intent);
+                } else if (response.code() == 403) {
+                    Intent intent = new Intent(getApplicationContext(), ResultActivity.class);
+                    intent.putExtra("user_name", response.header("user_name"));
+                    intent.putExtra("distance", response.header("distance"));
+                    intent.putExtra("authenticated", "false");
+                    startActivity(intent);
                 }
 
-                String responseBody = response.body().string();
-                Log.i("OKHTTP3", responseBody);
-
-                String userName = getStringByKey(responseBody, "user_name");
-
-                backgroundThreadUpdateTexts(getApplicationContext(), userIdView, userNameView, userId, userName);
             }
         });
     }

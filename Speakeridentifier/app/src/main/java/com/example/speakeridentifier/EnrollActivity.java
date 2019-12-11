@@ -78,7 +78,6 @@ public class EnrollActivity extends AppCompatActivity {
                 wavRecorder.stopRecording();
                 Toast.makeText(getApplicationContext(), "Recording stopped.", Toast.LENGTH_LONG).show();
                 // Start upload wav.
-                //new UploadFileAsync(name.getText().toString(), ROUTE).execute("");
                 new RequestUtils(getApplicationContext())
                         .upload(OUTPUT_FILE, name.getText().toString(), password.getText().toString(), ROUTE);
             }

@@ -44,7 +44,7 @@ public final class RequestUtils {
 
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
-                .addFormDataPart("username", username)
+                .addFormDataPart("user_name", username)
                 .addFormDataPart("password", password)
                 .addFormDataPart("audio_file", "audio_file.wav",
                         RequestBody.create(MEDIA_TYPE_WAV, new File(path)))
@@ -79,6 +79,7 @@ public final class RequestUtils {
                     Intent intent = new Intent(context, ResultActivity.class)
                             .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     intent.putExtra("user_id", response.header("user_id"));
+                    intent.putExtra("user_name", response.header("user_name"));
                     intent.putExtra("distance", response.header("distance"));
                     intent.putExtra("authenticated", response.header("true"));
                     context.startActivity(intent);

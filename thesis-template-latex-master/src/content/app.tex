@@ -39,7 +39,7 @@ Jelen alkalmazás egy beszélőfelismerő szoftvert szemléltet, amelyet a való
 
 Mivel az alkalmazás tárolja a regisztrált felhasználók hangmintáit és a modellt; a biztonság, a könnyű központi adminisztráció és a tény, hogy nincs szükség szinkronizációra mind megerősíti a kliens-szerver architektúra szükségességét és előnyeit, így peer-to-peer megoldás fel sem merült.
 
-\begin{figure}[!ht]
+\begin{figure}[H]
 	\centering
 	\includegraphics[width=100mm, keepaspectratio]{figures/app-register.png}
 	\caption{Beszélőfelismerő alkalmazás: Regisztrációs fázis.}
@@ -73,23 +73,35 @@ Miután a felhasználók regisztráltak, az alkalmazás a hangjuk alapján azono
 \subsection{Biztonsági funkciók}
 
 Azt is figyelembe kell venni, hogy azonosításkor a szerver a minimális vektortávolsághoz tartozó névvel tér vissza. Ez azt jelenti, hogy ha egy regisztrált felhasználó van a rendszerben,
-bárki képes lenne belépni a regisztrált felhasználó nevében, hiszen csak egy távolság van, ami minimális. Ennek elkerülésére további biztonsági funkciókkal kell kiegészíteni az alkalmazást;
-\ \\
+bárki képes lenne belépni a regisztrált felhasználó nevében, hiszen csak egy távolság van, ami minimális. Ennek elkerülésére további biztonsági funkciókkal kell kiegészíteni az alkalmazást.
+\newline
+\newline
 Meg kell határozni egy biztonsági küszöböt a vektorok távolságára - azaz ha nem elég hasonlóak, egyéb autentikációs mechanizmusra lesz szükség. Ennek megfelelően a szervert
-kiegészítettem egy biztonsági küszöbbel, amit ha azonosításkor a vektortávolság nem ér el, jelszó alapú azonosítást kér a felhasználótól. A biztonsági funkcióval kiegészített
-működés abban az esetben, ha a biztonsági küszöböt nem éri el az alkalmazás a \ref{fig:app-with-security} ábrán látható. A regisztrációs fázis annyiban tér el az előzőtől, hogy a felhasználó egy jelszót is megad a neve mellett, amit
+kiegészítettem egy biztonsági küszöbbel, amit ha azonosításkor a vektortávolság meghalad, jelszó alapú azonosítást kér a felhasználótól. A biztonsági funkcióval kiegészített
+működés abban az esetben, ha a biztonsági küszöböt meghaladja az alkalmazás a \ref{fig:app-with-security} ábrán látható. A regisztrációs fázis annyiban tér el az előzőtől, hogy a felhasználó egy jelszót is megad a neve mellett, amit
 a szerver eltárol.
 
-\begin{figure}[!ht]
+\begin{figure}[H]
 	\centering
 	\includegraphics[width=100mm, keepaspectratio]{figures/app-with-security.png}
 	\caption{Beszélőfelismerő alkalmazás: Azonosítás jelszó alapú autentikációval.}
 	\label{fig:app-with-security}
 \end{figure}
+\newpage
+\begin{enumerate}
+	\item A kliens rögzíti az azonosítani kívánt felhasználó hangját.
+	\item A hangmintát továbbítja a szervernek.
+	\item A szerveren futó alkalmazás a hangfájlt előfeldolgozza és hangvektort készít belőle.
+	\item A szerver összehasonlítja a hangvektort a korábban eltároltakkal és kiszámol egy hasonlósági pontot vagy vektortávolságot.
+	\item A pontszám meghaladja a biztonsági küszöböt, ezért kliensnek felszólítást küld, hogy jelszó alapú autentikációt kér.
+	\item A kliens megadja a saját jelszavát, amivel  korábban regisztrált és elküldi a szervernek.
+	\item A szerver ellenőrzi, hogy a megadott jelszó valóban az azonosítani kívánt felhasználóhoz tartozik-e. Amennyiben igen, visszaküldi az azonosított felhasználó nevét,
+	egyébként jelzi, hogy az autentikáció sikertelen volt.
+\end{enumerate}
 
 \subsection{Vektorok átlagolása}
 
-A szerver oldali alkalmazás minden sikeres azonosítás után átlagolja a tárolt vektort az aktuális azonosítottal. Azonosításkor ha a hasonlósági pontszám
+A vektorok átlagolása egy opcionális funkció. A szerver oldali alkalmazás minden sikeres azonosítás után átlagolja a tárolt vektort az aktuálisan azonosítottal. Azonosításkor ha a hasonlósági pontszám
 a biztonsági küszöb alatt van, az átlagolás minden további nélkül megtörténik.
 Amennyiben a minimális vektortávolság nem üti meg a küszöbszintet az alkalmazás az aktuális vektort ideiglenesen eltárolja. Ezután ha a felhasználó sikeresen autentikál jelszóval, a vektort átlagolja a korábbival majd törli, egyébként csak törli azt.
 
@@ -104,25 +116,14 @@ a vektorok között. A jelenlegi implementáció a következő hasonlósági pon
 	\item Koszinusz-távolság: $$d_{cos}(v_1, v_2) = \frac{v_1 \cdot v_2}{\left\lVert v_1 \right\rVert \cdot \left\lVert v_2 \right\rVert} = \frac{\sum_{i=1}^{n} x_i \cdot y_i}{\sqrt{\sum_{i=1}^{n} x_i^2} \cdot \sqrt{\sum_{i=1}^{n} y_i^2}}$$
 \end{itemize}
 \ \\
-Konfigurálható továbbá a biztonsági küszöbszám is. Ez azon értéke, melyet
-ha a hasonlósági pontszám nem ér el, a szerver jelszó alapú autentikációs kérést küld a kliens fele.
-
-\begin{enumerate}
-	\item A kliens rögzíti az azonosítani kívánt felhasználó hangját.
-	\item A hangmintát továbbítja a szervernek.
-	\item A szerveren futó alkalmazás a hangfájlt előfeldolgozza és hangvektort készít belőle.
-	\item A szerver összehasonlítja a hangvektort a korábban eltároltakkal és kiszámol egy hasonlósági pontot vagy vektortávolságot.
-	\item A pontszám nem éri el a biztonsági küszöböt, ezért kliensnek felszólítást küld, hogy jelszó alapú autentikációt kér.
-	\item A kliens megadja a saját jelszavát, amivel  korábban regisztrált és elküldi a szervernek.
-	\item A szerver ellenőrzi, hogy a megadott jelszó valóban az azonosítani kívánt felhasználóhoz tartozik-e. Amennyiben igen, visszaküldi az azonosított felhasználó nevét,
-	egyébként jelzi, hogy az autentikáció sikertelen volt.
-\end{enumerate}
+Konfigurálható továbbá a biztonsági küszöbszám is. Ez annak az értéke, amelyet
+ha a hasonlósági pontszám meghalad, a szerver jelszó alapú autentikációs kérést küld a kliens fele.
 
 \section{Implementáció}
 
 \subsection{Kliens alkalmazás}
 
-A kliens oldali android alkalmazást Android Studio segítségével készítettem el. Az alkalmazás felhasználói felületeket tartalmaz regisztrációhoz és azonosításhoz, képes hang rögzítésére wav formátumban és ennek http protokollon keresztüli továbbítására a szerverhez. A szerver válaszát az azonosításról jelzi a felhasználónak. 
+Ebben a fejezetben részletesen bemutatom az alkalmazás fő komponenseinek működését, felépítését és a fejlesztőkörnyezet részeit.
 
 \subsubsection{Projekt felépítése}
 
@@ -434,3 +435,13 @@ A kliens oldali Android alkalmazás fejlesztéséhez Android Studiot használtam
 
 Mivel az Android Studio emulátorai nem támogatják teljes mértékben az AMD processzorokat, külső emulátort használtam, a \emph{Genymotion}t. Ez egy külön alkalmazás és pluginnal csatlakoztatható az Android Studiohoz.
 
+\section{Tesztelés és kiértékelés}
+
+Az alkalmazást 8 emberrel teszteltem.
+
+\section{Használati esetek és továbbfejlesztési lehetőségek}
+
+Az implementált szoftver általános felhasználási módja a felhasználó azonosítás. Jelszó nélküli, csak hangalapú azonosítást kizárólag alacsony biztonsági szintű alkalmazásokban vagy funkciókban szabad használni. Minden komolyabb biztonságot követelő esetben vagy szigorú biztonsági küszöb, vagy kétfaktoros (hang és jelszó) autentikációt ajánlott használni.
+\begin{itemize}
+	\item 
+\end{itemize}

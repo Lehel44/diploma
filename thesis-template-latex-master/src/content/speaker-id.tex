@@ -81,7 +81,7 @@ Mivel ez egy mindenki által elérhető ingyenes beszédadatbázisnak készült 
 A CMU Arctic eleinte 2,5 millió szóból és az azokat tartalmazó 168000 mondatból állt. Ezekből a FestVox beszédszintézis projekt segítségével kiválogattak 52000 olyan mondatot, amelyek kiejtése könnyű és hossza 5 és 15 szó közé esett. További szigorításként csak olyan szavak kerülhettek be, amelyek részei a CMUDICT lexikonnak, hogy elkerüljék az eltérő kiejtéseket.
 \newline
 \newline
-Ezután a Festvox segítségével az 52000 mondatból kiválogatták a legnagyobb diád lefedettségű halmazt. A diád két egymás utáni félhang együtteseként előálló nyelvi egység, amely lefedettségének mértéke a beszédszintézis során előállított beszéd minősége miatt fontos. 
+Ezután a Festvox segítségével az 52000 mondatból kiválogatták a legnagyobb diád lefedettségű halmazt. A diád kettő, a triád három egymás utáni félhang együtteseként előálló nyelvi egység, amelyek lefedettségének mértéke a beszédszintézis során előállított beszéd minősége miatt fontos.
 \newline
 \newline
 A kiválogatott részt kivéve egy újabb halmazt választottak ki, amelyek 668 és 629 mondatból álltak. Ezeket manuálisan átnézve tovább finomították.
@@ -321,7 +321,7 @@ Az eredmények a korábbi i-vektoros rendszerekhez képest a Deep Speaker 50\% c
 
 \subsection{Speaker Recognition from Raw Waveform with SincNet}
 
-A SincNet (2018) is a korábban használt i-vektoros rendszerek helyett mutat be egy új CNN hálózatot. A CNN-ek előnye, hogy a korábban használt kézzel fabrikált jellemzők (pl. MFCC) helyett a hálózat maga tanulja meg a hang alacsony szintű reprezentációját nyers hullámformákból. Mivel a cikk a CNN-t kiegészíti hangszűrőkkel és a jelfeldolgozásban használatos fogalmakat használ, először ismertetem ezeket~\cite{sincnet}:
+A SincNet (2018) is a korábban használt i-vektoros rendszerek helyett mutat be egy új CNN hálózatot. A CNN-ek előnye, hogy a korábbi emberi hallás modellje alapján alkotott jellemzők (pl. MFCC) helyett a hálózat maga tanulja meg a hang alacsony szintű reprezentációját nyers hullámformákból. Mivel a cikk a CNN-t kiegészíti hangszűrőkkel és a jelfeldolgozásban használatos fogalmakat használ, először ismertetem ezeket~\cite{sincnet}:
 \begin{itemize}
 	\item Beszéd frekvencia: Egy periodikus hullámforma esetében a frekvencia a periódusidő reciproka, azza megmondja, hogy egységnyi idő alatt hány periódus ment végbe. Az emberi hang esetében a komplex hullámforma Fourier analízissel felbontható trigonometrikus (periodikus) függvények összegére. A Fourier transzformáció segítségével az idő-amplitúdó doménből frekvencia-amplitúdót képzünk, így a frekvencia komplex jel esetén is értelmet nyer.
 	\item Sávszélesség: Hang esetében általánosan a legalacsonyabb és legmagasabb frekvencia közötti különbség.
@@ -547,24 +547,28 @@ Egy reziduális blokk bemenete egy 2x1-es konvolúciós rétegen megy keresztül
 
 A módosított WaveNet architektúra segítségével a WaveNetet beszélőfelismerésre használhatjuk.
 \bigskip
-\begin{python}
-	from WaveNetClassifier import WaveNetClassifier
-	
-	wnc = WaveNetClassifier((96000,), (10,), kernel_size = 2, dilation_depth = 9,
-	                         n_filters = 40, task = 'classification')
-	
-	wnc.fit(X_train, y_train, validation_data = (X_val, y_val), epochs = 100,
-	        batch_size = 32, optimizer='adam', save=True, save_dir='./')
-	
-	y_pred = wnc.predict(X_test)
-	
-\end{python}
+\begin{figure}[H]
+	\centering
+	\begin{python}
+		from WaveNetClassifier import WaveNetClassifier
+		
+		wnc = WaveNetClassifier((96000,), (10,), kernel_size = 2, dilation_depth = 9,
+		                         n_filters = 40, task = 'classification')
+		
+		wnc.fit(X_train, y_train, validation_data = (X_val, y_val), epochs = 100,
+		        batch_size = 32, optimizer='adam', save=True, save_dir='./')
+		
+		y_pred = wnc.predict(X_test)
+	\end{python}
+	\caption{Wavenet classifier kód részlet.}
+	\label{code:wavenet-classifier}
+\end{figure}
 \bigskip
 A WaveNetClassifier objektum paraméterei:
 
 \begin{itemize}
 	\item \emph{input\_shape}: Bemeneti dimenziók tuple formájában. Például ha a bemenet egy 6 s hosszú hullámforma 16 kHz-en mintavételezve, a bemeneti dimenziók (96000,)
-	\item \emph{output\_shape}: Kimeneti dimenziók tuple formájában. Például ha 100 osztály szerint klasszifikálunk, a kimeneti dimenziókból képzett tuple (100,).
+	\item \emph{output\_shape}: Kimeneti dimenziók tuple formájában. Például ha 10 osztály szerint klasszifikálunk, a kimeneti dimenziókból képzett tuple (10,).
 	\item \emph{kernel\_size}: A konvolúciós filter/kernel mérete a reziduális blokkokban.
 	\item \emph{dilation\_depth}: A reziduális blokkok száma.
 	\item \emph{n\_filters}: A konvolúciós filterek száma a reziduális blokkokban.
@@ -576,7 +580,7 @@ A WaveNetClassifier objektum paraméterei:
 
 \subsection{Eredmények}
 
-A WaveNet classifiert TIMIT és CMU Arctic beszédadatbázisokkal teszteltem. A TIMIT beszédkorpusszal csak kevés beszélő esetén ért el jó eredményt, több mint 20 beszélő esetén a modell nem tanult. Ennek valószínűsített oka, hogy a TIMIT adatbázis beszélőnként 10 hangmintát tartalmaz.
+A WaveNet classifiert a \ref{code:wavenet-classifier} szerinti alapvető paraméterekkel, de 18 beszélővel a TIMIT és CMU Arctic beszédadatbázisokkal teszteltem. A TIMIT beszédkorpusszal csak kevés beszélő esetén ért el jó eredményt, több mint 20 beszélő esetén a modell nem tanult. Ennek valószínűsített oka, hogy a TIMIT adatbázis beszélőnként 10 hangmintát tartalmaz.
 
 \setlength\arrayrulewidth{0.6pt}
 
@@ -605,7 +609,7 @@ Kevés, 10 beszélővel és 2,5 másodperces hangmintákkal tanítva, a teszt ad
 \newline
 \newline
 A CMU Arctic adatbázisokat letöltöttem a Google Colaboratory-s fájlrendszerre és egy mappa alá mozgattam őket. Ehhez csak az adatbázis kódjára volt szükség, mindegyik azonos kezdetű url-en található.
-A CMU Arctic 16 bit-es wav fájlokat tartalmaz. Normalizálásként minden mintavételezett értéket leosztottam a maximális hosszal ($2^15 + 1$), hogy 0 és 1 közötti értéket vegyenek fel.
+A CMU Arctic 16 bit-es wav fájlokat tartalmaz. Normalizálásként minden mintavételezett értéket leosztottam a maximális hosszal ($2^{16} - 1$), hogy -1 és 1 közötti értéket vegyenek fel.
 \newline
 \newline
 Tanítómintáknak 2-3 másodperces részeket választottam. A megfelelő hosszú wav fájlokból kivágtam a [0:40000] részt, így pontosan $40000/16000 = 2,5$ s-os szeleteket kaptam. Mind a 18 adatbázisból kiválasztottam 100 ilyen mintát. Ezeket véletlenszerűen összekevertem és ez az 1800 elemű halmazzal tanítottam. Az epochok száma 200 volt, de mivel a tanítás a 43-44. epochnál már 1-es pontosságot és közel 0 veszteséget mutatott, leállítottam a folyamatot. 
@@ -633,7 +637,7 @@ Mivel a saját alkalmazásomban felhasználtam és átalakítottam a projekt egy
 röviden bemutatom a felépítését.
 
 \begin{itemize}
-	\item \emph{models.py}: A konvolúciós enkóder létrehozását és a sziámi hálózat építését végzi el.
+	\item \emph{models.py}: A konvolúciós enkóder létrehozását és a sziámi hálózat (\ref{section:siamese_conv} fejezet) építését végzi el.
 	\item \emph{librispeech.py}: Keras szekvencia osztály Librispeech beszédadatbázisból származó hangminták tárolására, előfeldolgozására és generálására tanításhoz. Fő paraméterei a következők:
 	\begin{itemize}
 		\item \emph{subsets}: Mely LibriSpeech adathalmazokat tartalmazza.
@@ -648,7 +652,7 @@ röviden bemutatom a felépítését.
 		\item \emph{build\_verification\_batch}: A sziámi hálózat teszteléséhez generál olyan batchet, amelyben az ugyanattól és az eltérő beszélőktől származó hangmintapárok száma azonos (50\%-50\%). A batch egy eleme két hangmintából és egy címkéből áll, ami jelzi, hogy egyazon vagy más-más beszélőktől származnak.
 		\item \emph{build\_n\_shot\_task(k, n)}: Visszaad egy segédhalmazt $n$ mintával minden egyes $k$ beszélőhöz és visszaad egy mintát, amiről a modellnek el kell döntenie, hogy melyik beszélőhöz tartozik.
 	\end{itemize}
-	\item \emph{utils.py}: Fő feladata az adatok preprocesszálása és az \emph{n\_shot\_task\_evaluation} függvény által az \emph{n-shot k-way} feladat kiértékelése. A few-shot kiértékeléshez alábbi argumentumokat adhatjuk meg:
+	\item \emph{utils.py}: Fő feladata az adatok preprocesszálása és az \emph{n\_shot\_task\_evaluation} függvény által az \emph{n-shot k-way} feladat kiértékelése (részletesen a \ref{section:few_shot_learning} fejezet ismerteti). A few-shot kiértékeléshez alábbi argumentumokat adhatjuk meg:
 	
 	\begin{itemize}
 		\item  \emph{model}: A tesztelendő modell.
@@ -824,14 +828,14 @@ Ideális esetben a $d(A, P) - d(A, N) + m$ negatív, ilyenkor a veszteség 0. Ha
 A tripletek kiválasztására többféle módszer létezik. A legegyszerűbb megoldás
 -- amit én is használtam -- a véletlenszerű kiválasztás. Emelett a tripleteket három kategóriába sorolhatjuk~\cite{triplet_semi_hard}\cite{triplet_github}. Ezt a \ref{fig:triplet-type} ábra szemlélteti:
 \begin{itemize}
-	\item Könnyű (negatív) triplet: A 0 veszteségű tripletek, mivel $d(A, P) + m \le d(A, N)$.
-	\item Nehéz (negatív) tripletek: A negatív közelebb van az anchorhoz mint a poztiív: $d(A, N) \le d(A, P)$
-	\item Félnehéz (negatív) tripletek: Olyan tripletek, ahol a negatív nincs közelebb az anchorhoz mint a pozitív, de mégis nagyobb a veszteség nullánál: $d(A, P) \le d(A, N) \le d(A, P) + m$.
+	\item Könnyű (negatív) triplet: A 0 veszteségű tripletek, mivel $d(A, P) + m \le d(A, N)$. (A \ref{fig:triplet-type} ábrán $APN_3$.)
+	\item Nehéz (negatív) tripletek: A negatív közelebb van az anchorhoz mint a pozitív: $d(A, N) \le d(A, P)$. (A \ref{fig:triplet-type} ábrán $APN_1$.)
+	\item Félnehéz (negatív) tripletek: Olyan tripletek, ahol a negatív nincs közelebb az anchorhoz mint a pozitív, de mégis nagyobb a veszteség nullánál: $d(A, P) \le d(A, N) \le d(A, P) + m$. (A \ref{fig:triplet-type} ábrán $APN_2$.)
 \end{itemize}
 
 \begin{figure}[!ht]
 	\centering
-	\includegraphics[width=120mm, keepaspectratio]{figures/triplet_type.png}
+	\includegraphics[width=130mm, keepaspectratio]{figures/triplet_own.png}
 	\caption{A tripletek három típusa.}
 	\label{fig:triplet-type}
 \end{figure}

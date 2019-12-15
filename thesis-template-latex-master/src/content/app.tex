@@ -429,19 +429,74 @@ Szintén hasznos funckió a remote debugger, aminek segítségével a távoli vi
 
 \subsubsection{Android Studio}
 
-A kliens oldali Android alkalmazás fejlesztéséhez Android Studiot használtam, ami az Android hivatalos fejlesztőkörnyezete. Az beépített templatek új \emph{Activity}k és a Layout Editor nagyban megkönnyíti a felhasználói felület fejlesztését. Támogatja emulátorok használatát, amelyeken debugolni is lehet.
+A kliens oldali Android alkalmazás fejlesztéséhez Android Studiot használtam, ami az Android hivatalos fejlesztőkörnyezete. A beépített templatek új \emph{Activity}k és a Layout Editor nagyban megkönnyíti a felhasználói felület fejlesztését. Támogatja emulátorok használatát, amelyeken debugolni is lehet.
 
 \subsubsection{Genymotion}
 
 Mivel az Android Studio emulátorai nem támogatják teljes mértékben az AMD processzorokat, külső emulátort használtam, a \emph{Genymotion}t. Ez egy külön alkalmazás és pluginnal csatlakoztatható az Android Studiohoz.
 
-\section{Tesztelés és kiértékelés}
+\section{Tesztelése és kiértékelés}
 
-Az alkalmazást 8 emberrel teszteltem.
+Az alkalmazást 8 emberrel teszteltem. Először egyenként regisztráltak a rendszerben, majd mindenkit háromszor próbált azonosítani az alkalmazás. A \ref{fig:app-test-results} táblázat a három próbálkozás alapján átlagolt távolságvektorokat mutatja. Egysor egy azonosítási kísérletet jelöl és a félkövér számok mutatják a minimumot az adott sorban.
+\newline
+\newline
+A regisztráció és az azonosítás két külön időpontban történt. A háttérzaj mérsékelten volt jelen. Összesen 24 kísérletet végeztem. Ebből 11 volt sikeres, 13 sikertelen. (A táblázatban a beszélők azonos nemmel, de álnévvel vannak feljegyezve.)
+
+\begin{table}[!ht]
+	\begin{tabular}{*9l} \toprule
+		\bfseries Név & \bfseries Adalbert & \bfseries Bonifác & \bfseries Citta & \bfseries Detti & \bfseries Elek & \bfseries Fóris & \bfseries Gandalf & \bfseries Horác \\ \midrule
+		Adalbert & 14.56 & 16.15 & 47.60 & 39.28 & 40.12 & 23.77 & \textbf{12.79} & 29.62 \\
+		Bonifác & 14.81 & \textbf{11.98} & 41.68 & 50.08 & 21.40 & 14.29 & 13.36 & 18.86 \\
+		Citta & 46.33 & 51.06 & 18.42 & \textbf{15.49} & 36.38 & 43.87 & 48.07 & 38.7 \\
+		Detti & 65.19 & 54.47 & 26.29 & \textbf{17.69} & 39.81 & 45.63 & 50.12 & 40.19 \\
+		Elek & 21.52 & 20.64 & 31.50 & 41.52 & \textbf{11.34} & 14.39 & 19.97 & 16.68 \\
+		Fóris & \textbf{11,42} & 15,12 & 35,22 & 43,37 & 17,62 & 12,23 & 14,41 & 15.87 \\
+		Gandalf & 15.87 & 20.28 & 33.03 & 41.57 & 16.36 & 14.23 & 16.97 & \textbf{14.11} \\
+		Horác & 17.36 & \textbf{13.37} & 45.51 & 51.92 & 28.33 & 20.27 & 14.97 & 24.82 \\
+		\bottomrule
+		\hline
+	\end{tabular}
+	\centering
+	\caption{A tesztelés eredményei.}
+	\label{fig:app-test-results}
+\end{table}
+\ \\
+Az EER meghatározásához felrajzoltam a FRR és FAR görbéket. A küszöbtávolságot növelve, azaz az érzékenységet csökkentve a rendszerben az FRR-nek csökkenie kellene, ennek ellenére 8 beszélő esetén nőtt, az FAR pedig nem volt monoton. Arra a következtetésre jutottam, hogy 8 beszélő nem elég a rendszer karakterisztikájának kirajzolásához. Az EER emiatt a grafikonok alapján nem meghatározható.
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=120mm, keepaspectratio]{figures/test-eer.png}
+	\caption{FRR és FAR diagramok.}
+	\label{fig:test-eer}
+\end{figure}
+\ \\
+A táblázat alapján kiszámoltam az FFR és FAR értékeket egyes küszöbszámokra, és az $FRR + FAR$ értéket minimalizáltam, amely alapján megfelelő vektortávolságok a $d = 2$ és $d = 12$. Ezen küszöbök esetén az $FRR + FAR = 2$. A küszöb alatt a hang alapú identtifikáció eredményét elfogadjuk, fölötte jelszó alapú autentikációt kérünk.
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=120mm, keepaspectratio]{figures/speaker-projection.png}
+	\caption{Hangvektorok 3D-s leképzése Tensorflow Projectorral.}
+	\label{fig:speaker-projection}
+\end{figure}
+\ \\
+Látható, hogy a két női hang egymáshoz közel van és elkülönül a többi férfihangtól. A rendszer legtöbbször ott téved, ahol a hangvektorok közel vannak egymáshoz. Adalbert helyett Gandalfot és Citta helyett Dettit azonosította. Ugyanakkor vannak anomáliák is. Például annak ellenére, hogy regisztrációkor a Gandalf és Horác közötti távolság egyáltalán nem volt közeli a többihez viszonyítva, azonosításkor a hangvektor közel került hozzá Horáchoz és Gandalfot a rendszer rosszul azonosította.
 
 \section{Használati esetek és továbbfejlesztési lehetőségek}
 
-Az implementált szoftver általános felhasználási módja a felhasználó azonosítás. Jelszó nélküli, csak hangalapú azonosítást kizárólag alacsony biztonsági szintű alkalmazásokban vagy funkciókban szabad használni. Minden komolyabb biztonságot követelő esetben vagy szigorú biztonsági küszöb, vagy kétfaktoros (hang és jelszó) autentikációt ajánlott használni.
+Az implementált szoftver általános felhasználási módja a felhasználó azonosítás. Jelszó nélküli, csak hangalapú azonosítást kizárólag alacsony biztonsági szintű alkalmazásokban vagy funkciókban érdemes használni. Minden komolyabb biztonságot követelő esetben vagy szigorú biztonsági küszöb, vagy kétfaktoros (hang és jelszó) autentikációt ajánlott használni.
 \begin{itemize}
-	\item 
+	\item Az okos otthoni asszisztensek -- mint a Google Home vagy Amazon's Alexa -- irányításához autentikáció szükséges. Mivel ezek az eszközök hangvezéreltek és többen is használhatják, a hangalapú beszélőazonosítás egy találó megoldás.
+	\item Kórházakban az orvos lekérheti a beteg adatait, módosíthatja, mentheti őket. Az autentikáció beszélőazonosítással történhet.
+	\item Telefonos ügyintézés esetén a hívő felet hang alapján lehetne azonosítani és a felhasználó adatait megjeleníteni az ügyintéző számára a gyorsabb munkavégzés érdekében.
 \end{itemize}
+\ \\
+Ha a hangalapú azonosítás szigorúbb biztonsági követelményeknek megfelelne, akkor számlafizetést, banki tranzakciókat is lehetne hangalapú azonosítás alapján végezni.
+\newline
+\newline
+Mivel a modellt LibriSpeech adatbázissal tanították, ami a Project Gutenbergből tartalmaz hangoskönyv részleteket, a beszéd végig tiszta és nem modellezi a valós körülményeket. Ez lehet az oka annak, hogy való életben a modell nem működött olyan jól mint a LibriSpeech hangmintáival.
+\newline
+\newline
+A háttérzaj, változások a beszédhangban (rekedtség, hangszín) mind nehézséget okozhatnak egy ilyen körülmények nélkül tanított modellben. Célszerű lenne kipróbálni egy tanítást a VoxCeleb2 adatbázissal, amely életszerűbb, valós eseményekről és a LibriSpeechhez képest kb. hatszor annyi beszélőtől tartalmaz beszédrészleteket.
+\newline
+\newline
+További jövőbeli terv kiegészíteni a rendszert úgy, hogy használható legyen teljesítménymérésre. Az elképzelés szerint a felhasználó feltöltheti a saját, rendszer által támogatott modelljét egy webes felületre. Az alkalmazás pedig teszteket futtat rajta, kiértékeli és összehasonlítja a korábban regisztrált eredményekkel.

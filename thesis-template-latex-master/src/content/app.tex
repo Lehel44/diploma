@@ -2,7 +2,7 @@
 \chapter{Android alkalmazás beszélőfelismerésre}
 %----------------------------------------------------------------------------
 
-A következő fejezetben bemutatom egy általam a beszélőfelismerés szemléltetésére készített android alkalmazás fő elemeit és működését, a kapcsolódó technológiákat és implementációs részleteket. Az alkalmazásban konkrét beszélőfelismerésre készített neurális hálózatokat használok fel. A cél nem egy új beszélőfelismerő modell készítése volt, hanem az eddigiek felhasználásával egy működő alkalmazás létrehozása.
+Ebben a fejezetben bemutatom egy általam a beszélőfelismerés szemléltetésére készített android alkalmazás fő elemeit és működését, a kapcsolódó technológiákat és implementációs részleteket. Az alkalmazásban konkrét beszélőfelismerésre készített neurális hálózatokat használok fel. A cél nem egy új beszélőfelismerő modell készítése volt, hanem az eddigiek felhasználásával egy működő alkalmazás létrehozása.
 \newline
 \newline
 Az alkalmazás kliens-szerver architektúrájú. Az android kliens segítségével a felhasználó regisztrálhat a rendszerbe névvel és hanggal, majd az azonosítás opció megnyomásával hangmintát adva az alkalmazás eldönti, hogy regisztrálva van-e, és ha igen, akkor visszaadja az illető nevét.
@@ -198,7 +198,7 @@ A zöld fejlécen a vissza nyílra kattintva visszajutunk a főmenübe. Ezt az o
 \end{figure}
 
 \newpage
-A főmenüből az azonosító felületre lépve az \emph{Identify} gombra kattintva szintén visszaszámlálásra elindul a hangrögzítés, ami négy másodperig tart. Ezután megkapjuk a választ; az azonosított felhasználó nevét, vagy a nem sikerült azonosítani üzenetet.
+A főmenüből az azonosító felületre lépve az \emph{Identify} gombra kattintva szintén visszaszámlálásra elindul a hangrögzítés, ami négy másodperig tart. Ezután megkapjuk a választ; az azonosított felhasználó nevét, vagy a "nem sikerült azonosítani" üzenetet.
 
 \subsubsection{Osztálydiagram és részletes működés}
 
@@ -315,7 +315,7 @@ Az alkalmazás a következő REST végpontokat biztosítja a kliens számára:
 		\newline
 		Végül frissíti a \emph{user\_dict} dictionaryt az aktuális felhasználó nevével és azonosítójával.
 		\newline
-		\item \emph{identify()}: A kliens ide küldi a hangmintát azonosításra. Amennyiben a hangminta nem támogatott formátumú, HTTP 400 (Bad Request) státuszkóddal válaszol. Ha a hangminta támogatott preprocesszálja, majd hangvektort készít belőle. Összehasonlítja a korábban regisztrált felhasználók hangvektorjaival, és megkeresi a minimális hasonlósági pontszámot. 
+		\item \emph{identify()}: A kliens ide küldi a hangmintát azonosításra. Amennyiben a hangminta nem támogatott formátumú, HTTP 400 (Bad Request) státuszkóddal válaszol. Ha a hangminta támogatott preprocesszálja, majd hangvektort készít belőle. Összehasonlítja a korábban regisztrált felhasználók hangvektorjaival, és megkeresi a minimális hasonlósági pontszámot.
 		\newline
 		\newline
 		Ha a minimális távolság meghaladja a biztonsági küszöböt, az aktuális vektort menti későbbi lehetséges átlagolás céljából. Ezután jelszó alapú autentikációs kérést küldd a kliensnek HTTP 403 (Forbidden) státuszkóddal. Mivel a HTTP protokoll állapotmentes, a kérés fejlécében elküldi a minimális távolsághoz tartozó felhasználó azonosítóját is az egyszerűség kedvéért (session kezelés helyett).
@@ -349,7 +349,7 @@ Az alkalmazás a következő REST végpontokat biztosítja a kliens számára:
 	\item \emph{preprocess.py}:
 		
 		\begin{itemize}
-		\item \emph{whiten(batch, rms)}: A \emph{whiten} standardizálja a hangmintákat. Egy hangmintát egész számok sorozata reprezentál (PCM kódolás 4 vagy 16 biten). Először kivonja az átlagot minden számból, így a hangminta átlaga 0 lesz. Ezután újraskálázza a számokat, hogy ne legyenek kiugró amplitúdó értékek.
+		\item \emph{whiten(batch, rms)}: A \emph{whiten} standardizálja a hangmintákat. Egy hangmintát egész számok sorozata reprezentál. Először kivonja az átlagot minden számból, így a hangminta átlaga 0 lesz. Ezután újraskálázza a számokat, hogy ne legyenek kiugró amplitúdó értékek.
 		\newline
 		\item \emph{preprocess\_instances(downsampling, whitening)}: A \emph{preprocess} függvénynek két fő paramétere van: a hangminta hossza és a \emph{downsampling}, vagyis a csökkentett mintavételezési ráta. Ez a függvény végzi el a csökkentett mintavételezést és a standardizálást egy hangmintán.
 		\newline
@@ -499,4 +499,15 @@ Mivel a modellt LibriSpeech adatbázissal tanították, ami a Project Gutenbergb
 A háttérzaj, változások a beszédhangban (rekedtség, hangszín) mind nehézséget okozhatnak egy ilyen körülmények nélkül tanított modellben. Célszerű lenne kipróbálni egy tanítást a VoxCeleb2 adatbázissal, amely életszerűbb, valós eseményekről és a LibriSpeechhez képest kb. hatszor annyi beszélőtől tartalmaz beszédrészleteket.
 \newline
 \newline
-További jövőbeli terv kiegészíteni a rendszert úgy, hogy használható legyen teljesítménymérésre. Az elképzelés szerint a felhasználó feltöltheti a saját, rendszer által támogatott modelljét egy webes felületre. Az alkalmazás pedig teszteket futtat rajta, kiértékeli és összehasonlítja a korábban regisztrált eredményekkel.
+További jövőbeli terv kiegészíteni a rendszert úgy, hogy használható legyen teljesítménymérésre. Az elképzelés szerint a felhasználó feltöltheti a saját, rendszer által támogatott modelljét egy webes felületre. Az alkalmazás pedig teszteket futtat rajta, kiértékeli és összehasonlítja a korábban regisztrált eredményekkel, amelyeket nyilvánosan elérhetőek.
+
+\chapter{Összefoglalás}
+
+Dolgozatomban bemutattam az eddigi ismert régebbi és korszerű hangalapú azonosítási módszereket az \ref{section:old_models} és \ref {section:modern_speaker_recognition} fejezetekben az automatikus beszélőfelismerés történetétől kezdve a modern neurális hálózat alapú megközelítésekig. Megvizsgáltam, hogy a rendszerek hány felhasználót képesek kezelni és mekkora hangmintákkal dolgoznak (\ref{section:old_models}, \ref{section:modern_speaker_recognition} és \ref{section:voice-length} fejezetek).
+\newline
+\newline
+Készítettem egy saját demonstrációs rendszert egy android alkalmazás formájában beszélőfelismerő modellek tesztelésére, amelyet 8 emberen teszteltem és kiértékeltem.
+A módszer telefonos felhasználásra alkalmasnak bizonyult, a tesztelés telefonon történt.
+\newline
+\newline
+Ezen kívül ismertettem a mai beszédadatbázisokat, bemutattam két konkrét beszélőfelismerő rendszert, amelyeken kísérleteket végeztem és kitértem a meta learning optimizálási módszereire is.

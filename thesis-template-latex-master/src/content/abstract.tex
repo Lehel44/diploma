@@ -11,7 +11,10 @@
 A biometrikus azonosításra használható modern, neurális hálózat alapú beszélőfelismerés jelenleg széles körben kutatott, gyorsan fejlődő terület. Jelenleg nincs átfogó rendszerezés, összehasonlítás a rendszerek között és ingyenesen elérhető beszélőfelismerő alkalmazás sem különböző modellek teljesítményének összeméréshez.
 \newline
 \newline
-Dolgozatomban bemutatom a korai beszélőfelismerő rendszereket, a mai modern neurális hálózat alapú megközelítéseket és az ingyenesen elérhető beszédadatbázisokat. Ismertetem a metatanítás fogalmát a hozzá kapcsolódó optimizációs technikákkal. Részletesen bemutatok két beszélőfelismerő modellt; egy módosított WaveNet architektúrát és egy sziámi konvolúciós hálózatot, amelyeken méréseket is végzek. Végül leírom az általam készített Android alapú beszélőfelismerő alkalmazás implementációs részleteit, optimizálását és a felhasználási lehetőségeit.
+Dolgozatomban bemutatom a korai beszélőfelismerő rendszereket, a mai modern neurális hálózat alapú megközelítéseket és az ingyenesen elérhető beszédadatbázisokat. Ismertetem a metatanítás fogalmát a hozzá kapcsolódó optimizációs technikákkal. Részletesen bemutatok két beszélőfelismerő modellt; egy módosított WaveNet architektúrát és egy sziámi konvolúciós hálózatot, amelyeken méréseket is végzek.
+\newline
+\newline
+Végül leírom az általam készített Android alapú beszélőfelismerő alkalmazás implementációs részleteit, optimizálását és a felhasználási lehetőségeit. Az alkalmazást 8 beszélővel teszteltem és kiértékeltem az eredményeket, amelyek jól mutatják, hogy mesterséges környezetben tanított modellek nem viselkednek az elvárt módon valós körülmények között.
 
 
 \vfill
@@ -23,10 +26,14 @@ Dolgozatomban bemutatom a korai beszélőfelismerő rendszereket, a mai modern n
 %----------------------------------------------------------------------------
 \chapter*{Abstract}\addcontentsline{toc}{chapter}{Abstract}
 
-Modern neural network-based speech recognition for biometric identification is a widely researched, rapidly evolving field. There is currently no comprehensive systematisation, system comparison, and free speech recognition application to compare performance across different models.
+Modern neural network-based speech recognition for biometric identification is a widely researched and rapidly evolving field. There is currently no comprehensive systematisation, system comparison, and free speech recognition application for testing and to compare performance across different models.
 \newline
 \newline
-In my thesis I introduce early speech recognition systems, today's modern neural network-based approaches and free speech recognition datasets. I introduce the concept of meta-learning with the related optimization techniques. I present in detail two models of speech recognition; a modified WaveNet architecture and a Siamese convolutional network, on which I also make measurements. Finally, I will describe the implementation details, optimization, and applications of my Android-based speech recognition application.
+In my thesis I introduce early speech recognition systems, today's modern neural network-based approaches and free speech recognition datasets. I introduce the concept of meta-learning with the related optimization techniques. I present in detail two models of speech recognition; a modified WaveNet architecture and a Siamese convolutional network, on which I also make measurements.
+\newline
+\newline
+Finally, I describe the architecture, implementation details, optimization, and applications of my Android-based speech recognition application.
+I tested the application with 8 speakers and evaluated the results, which show that models trained in artificial environments do not behave as expected in real-world conditions.
 
 
 \vfill
